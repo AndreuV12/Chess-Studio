@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Chess, DEFAULT_POSITION, type Move as ChessMove, type Square } from "chess.js";
+import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
 import InteractiveBoard from "@/components/InteractiveBoard";
 import ChessHistory from "@/components/ChessHistory";
 import MovesPanel from "@/components/MovesPanel";
@@ -15,13 +15,41 @@ export default function ChessWorkspace() {
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   useEffect(() => {
-    getMoves().then(setMoves).catch(console.error);
+    getMoves()
+      .then((moves) => {
+        setMoves(moves);
+
+        const initialHistory = buildLine(DEFAULT_POSITION, moves);
+
+        setHistory(initialHistory);
+        setCurrentIndex(-1);
+        setFen(DEFAULT_POSITION);
+      })
+      .catch(console.error);
   }, []);
 
   const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
 
+  function buildLine(fenFrom: string, allMoves: Move[]) {
+    const line: Move[] = [];
+    let currentFen = fenFrom;
+
+    while (true) {
+      const nextMove = allMoves.find((move) => move.fenFrom === currentFen);
+
+      if (!nextMove) break;
+
+      line.push(nextMove);
+      currentFen = nextMove.fenTo;
+    }
+
+    return line;
+  }
+
   async function applyMove(fenFrom: string, fenTo: string, uci: string) {
     let move = moves.find((move) => move.fenFrom === fenFrom && move.uci === uci);
+
+    let allMoves = moves;
 
     if (!move) {
       move = await createMove({
@@ -31,13 +59,17 @@ export default function ChessWorkspace() {
         evaluation: null,
       });
 
-      setMoves((current) => [...current, move!]);
+      allMoves = [...moves, move];
+      setMoves(allMoves);
     }
 
-    const nextHistory = [...history.slice(0, currentIndex + 1), move];
+    const prefix = history.slice(0, currentIndex + 1);
+    const continuation = buildLine(move.fenTo, allMoves);
+
+    const nextHistory = [...prefix, move, ...continuation];
 
     setHistory(nextHistory);
-    setCurrentIndex(nextHistory.length - 1);
+    setCurrentIndex(prefix.length);
     setFen(move.fenTo);
   }
 
@@ -53,6 +85,7 @@ export default function ChessWorkspace() {
 
   function goToMove(index: number) {
     setCurrentIndex(index);
+
     setFen(index === -1 ? DEFAULT_POSITION : history[index].fenTo);
   }
 
