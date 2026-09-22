@@ -113,25 +113,26 @@ export default function ChessWorkspace() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <main className="flex flex-1 justify-center p-6">
-        <div className="w-full max-w-2xl">
-          <div className="space-y-1">
-            <InteractiveBoard fen={fen} onMove={handleBoardMove} />
-            <ChessNavigation
-              currentIndex={currentIndex}
-              historyLength={history.length}
-              onFirst={goToFirst}
-              onPrevious={goToPrevious}
-              onNext={goToNext}
-              onLast={goToLast}
-            />
-          </div>
-          <ChessHistory history={history} currentIndex={currentIndex} onMoveClick={goToMove} />
+    <div className="mx-auto w-full max-w-5xl p-6">
+      <div className="flex gap-4">
+        <div className="w-full max-w-2xl space-y-1">
+          <InteractiveBoard fen={fen} onMove={handleBoardMove} />
+          <ChessNavigation
+            currentIndex={currentIndex}
+            historyLength={history.length}
+            onFirst={goToFirst}
+            onPrevious={goToPrevious}
+            onNext={goToNext}
+            onLast={goToLast}
+          />
         </div>
-      </main>
 
-      <MovesPanel moves={availableMoves} onMoveClick={handleSavedMove} />
+        <div className="flex-1">
+          <MovesPanel moves={availableMoves} onMoveClick={handleSavedMove} />
+        </div>
+      </div>
+
+      <ChessHistory history={history} currentIndex={currentIndex} onMoveClick={goToMove} />
     </div>
   );
 }
