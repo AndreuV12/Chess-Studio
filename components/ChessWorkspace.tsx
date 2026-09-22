@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Stockfish } from "@/engine/stockfish";
+
 import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
+import { EngineAnalysis } from "@/engine/types";
+
 import InteractiveBoard from "@/components/InteractiveBoard";
 import ChessHistory from "@/components/ChessHistory";
-import ChessNavigation from "@/components/ChessNavigation";
 import MovesPanel from "@/components/MovesPanel";
 import OpeningTitle from "@/components/OpeningTitle";
 import { createMove, getMoves } from "@/api/moves";
@@ -18,6 +21,25 @@ export default function ChessWorkspace() {
   const currentMove = currentIndex >= 0 ? history[currentIndex] : undefined;
 
   const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
+  const [analysis, setAnalysis] = useState<EngineAnalysis | null>(null);
+
+  const stockfishRef = useRef<Stockfish | null>(null);
+
+  useEffect(() => {
+    stockfishRef.current = Stockfish.getInstance();
+  }, []);
+
+  useEffect(() => {
+    if (!stockfishRef.current) return;
+    stockfishRef.current
+      .analyze(fen, { depth: 18 })
+      .then(setAnalysis)
+      .catch((error) => {
+        if (error.message !== "Analysis cancelled") {
+          console.error(error);
+        }
+      });
+  }, [fen]);
 
   useEffect(() => {
     getMoves()
@@ -122,6 +144,7 @@ export default function ChessWorkspace() {
           <InteractiveBoard
             fen={fen}
             lastMove={currentMove}
+            analysis={analysis}
             currentIndex={currentIndex}
             historyLength={history.length}
             onMove={handleBoardMove}

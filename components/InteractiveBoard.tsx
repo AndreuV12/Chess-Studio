@@ -5,11 +5,14 @@ import { Chess, type Move, type Square } from "chess.js";
 import { RotateCwSquare } from "lucide-react";
 import ChessBoard from "@/components/ChessBoard";
 import ChessNavigation from "@/components/ChessNavigation";
+import EvalBar from "@/components/EvalBar";
 import type { Move as MoveSchema } from "@/db/schema/move";
+import type { EngineAnalysis } from "@/engine/types";
 
 type InteractiveBoardProps = {
   fen: string;
   lastMove?: MoveSchema;
+  analysis?: EngineAnalysis | null;
   currentIndex: number;
   historyLength: number;
   onMove?: (move: Move, fen: string) => void;
@@ -19,10 +22,20 @@ type InteractiveBoardProps = {
   onLast: () => void;
 };
 
-export default function InteractiveBoard({ fen, lastMove, currentIndex, historyLength, onMove, onFirst, onPrevious, onNext, onLast }: InteractiveBoardProps) {
+export default function InteractiveBoard({
+  fen,
+  lastMove,
+  analysis,
+  currentIndex,
+  historyLength,
+  onMove,
+  onFirst,
+  onPrevious,
+  onNext,
+  onLast,
+}: InteractiveBoardProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const [rotated, setRotated] = useState(false);
-
   const chess = useMemo(() => new Chess(fen), [fen]);
 
   function handleSquareClick(square: Square) {
@@ -30,7 +43,6 @@ export default function InteractiveBoard({ fen, lastMove, currentIndex, historyL
 
     if (!selected) {
       if (!piece || piece.color !== chess.turn()) return;
-
       setSelected(square);
       return;
     }
@@ -53,7 +65,6 @@ export default function InteractiveBoard({ fen, lastMove, currentIndex, historyL
     }
 
     const game = new Chess(fen);
-
     const move = game.move({
       from: selected,
       to: square,
@@ -66,7 +77,13 @@ export default function InteractiveBoard({ fen, lastMove, currentIndex, historyL
 
   return (
     <div className="space-y-1">
-      <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />
+      <div className="flex gap-2 border">
+        <EvalBar evaluation={analysis?.evaluation ?? null} />
+
+        <div className="flex-1">
+          <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />
+        </div>
+      </div>
 
       <div className="flex gap-1">
         <ChessNavigation currentIndex={currentIndex} historyLength={historyLength} onFirst={onFirst} onPrevious={onPrevious} onNext={onNext} onLast={onLast} />
