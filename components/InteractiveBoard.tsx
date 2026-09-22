@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 import { Chess, type Move, type Square } from "chess.js";
 import ChessBoard from "@/components/ChessBoard";
+import type { Move as MoveSchema } from "@/db/schema/move";
 
 type InteractiveBoardProps = {
   fen: string;
+  lastMove?: MoveSchema;
   rotated?: boolean;
   onMove?: (move: Move, fen: string) => void;
 };
 
-export default function InteractiveBoard({ fen, rotated = false, onMove }: InteractiveBoardProps) {
+export default function InteractiveBoard({ fen, lastMove, rotated = false, onMove }: InteractiveBoardProps) {
   const [selected, setSelected] = useState<Square | null>(null);
 
   const chess = useMemo(() => new Chess(fen), [fen]);
@@ -54,5 +56,5 @@ export default function InteractiveBoard({ fen, rotated = false, onMove }: Inter
     onMove?.(move, game.fen());
   }
 
-  return <ChessBoard fen={fen} selected={selected} rotated={rotated} onSquareClick={handleSquareClick} />;
+  return <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />;
 }

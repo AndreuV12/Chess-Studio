@@ -15,6 +15,9 @@ export default function ChessWorkspace() {
   const [moves, setMoves] = useState<Move[]>([]);
   const [history, setHistory] = useState<Move[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
+  const currentMove = currentIndex >= 0 ? history[currentIndex] : undefined;
+
+  const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
 
   useEffect(() => {
     getMoves()
@@ -29,8 +32,6 @@ export default function ChessWorkspace() {
       })
       .catch(console.error);
   }, []);
-
-  const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
 
   function buildLine(fenFrom: string, allMoves: Move[]) {
     const line: Move[] = [];
@@ -117,8 +118,8 @@ export default function ChessWorkspace() {
     <div className="mx-auto w-full max-w-5xl p-6">
       <OpeningTitle fen={fen} />
       <div className="flex gap-4">
-        <div className="w-full max-w-2xl space-y-1">
-          <InteractiveBoard fen={fen} onMove={handleBoardMove} />
+        <div className="w-full max-w-150 space-y-1">
+          <InteractiveBoard fen={fen} onMove={handleBoardMove} lastMove={currentMove} />
           <ChessNavigation
             currentIndex={currentIndex}
             historyLength={history.length}
