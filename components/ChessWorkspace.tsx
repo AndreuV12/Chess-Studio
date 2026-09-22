@@ -10,7 +10,7 @@ import InteractiveBoard from "@/components/InteractiveBoard";
 import ChessHistory from "@/components/ChessHistory";
 import MovesPanel from "@/components/MovesPanel";
 import OpeningTitle from "@/components/OpeningTitle";
-import { createMove, getMoves } from "@/api/moves";
+import { createMove, getMoves, updateMoveEvaluation } from "@/api/moves";
 import type { Move } from "@/db/schema/move";
 
 export default function ChessWorkspace() {
@@ -31,15 +31,37 @@ export default function ChessWorkspace() {
 
   useEffect(() => {
     if (!stockfishRef.current) return;
+    if (!currentMove) {
+      setAnalysis(null);
+      return;
+    }
+
+    if (currentMove.evaluation !== null) {
+      setAnalysis({
+        depth: 0,
+        evaluation: currentMove.evaluation,
+        mate: null,
+        bestMove: null,
+        pv: [],
+      });
+      return;
+    }
+
     stockfishRef.current
       .analyze(fen, { depth: 18 })
-      .then(setAnalysis)
+      .then(async (analysis) => {
+        setAnalysis(analysis);
+        if (analysis.evaluation === null) return;
+        await updateMoveEvaluation(currentMove.id, analysis.evaluation);
+        setMoves((moves) => moves.map((move) => (move.id === currentMove.id ? { ...move, evaluation: analysis.evaluation } : move)));
+        setHistory((history) => history.map((move) => (move.id === currentMove.id ? { ...move, evaluation: analysis.evaluation } : move)));
+      })
       .catch((error) => {
         if (error.message !== "Analysis cancelled") {
           console.error(error);
         }
       });
-  }, [fen]);
+  }, [fen, currentMove]);
 
   useEffect(() => {
     getMoves()
