@@ -6,6 +6,7 @@ import InteractiveBoard from "@/components/InteractiveBoard";
 import ChessHistory from "@/components/ChessHistory";
 import ChessNavigation from "@/components/ChessNavigation";
 import MovesPanel from "@/components/MovesPanel";
+import OpeningTitle from "@/components/OpeningTitle";
 import { createMove, getMoves } from "@/api/moves";
 import type { Move } from "@/db/schema/move";
 
@@ -114,6 +115,7 @@ export default function ChessWorkspace() {
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6">
+      <OpeningTitle fen={fen} />
       <div className="flex gap-4">
         <div className="w-full max-w-2xl space-y-1">
           <InteractiveBoard fen={fen} onMove={handleBoardMove} />
