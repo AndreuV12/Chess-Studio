@@ -34,30 +34,21 @@ export default function ChessHistory({ history, currentIndex, onMoveClick }: Che
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-zinc-200 p-3">
-      <div className="space-y-1">
+    <div className="mt-3 min-h-40 rounded-lg border border-zinc-200 bg-white p-3">
+      <div className="flex flex-wrap gap-2">
         {rows.map((row) => (
-          <div key={row.number} className="grid grid-cols-[40px_1fr_1fr] items-center gap-2">
-            <span className="text-sm text-zinc-500">{row.number}.</span>
-
-            <button
-              type="button"
-              onClick={() => onMoveClick(row.white.index)}
-              className={currentIndex === row.white.index ? "rounded bg-zinc-200 px-2 py-1 text-left" : "rounded px-2 py-1 text-left hover:bg-zinc-100"}
-            >
-              {row.white.san}
-            </button>
-
-            {row.black && (
-              <button
-                type="button"
-                onClick={() => onMoveClick(row.black.index)}
-                className={currentIndex === row.black.index ? "rounded bg-zinc-200 px-2 py-1 text-left" : "rounded px-2 py-1 text-left hover:bg-zinc-100"}
-              >
-                {row.black.san}
-              </button>
-            )}
-          </div>
+          <button
+            key={row.number}
+            type="button"
+            onClick={() => onMoveClick(row.white.index)}
+            className={`rounded-md px-2 py-1 text-sm transition hover:bg-zinc-200 ${
+              currentIndex === row.white.index || currentIndex === row.black?.index ? "bg-zinc-200 text-zinc-950" : "bg-zinc-100 text-zinc-700"
+            }`}
+          >
+            <span className="mr-1 text-zinc-500">{row.number}.</span>
+            {row.white.san}
+            {row.black && ` ${row.black.san}`}
+          </button>
         ))}
       </div>
     </div>
