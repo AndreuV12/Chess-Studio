@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
 import InteractiveBoard from "@/components/InteractiveBoard";
 import ChessHistory from "@/components/ChessHistory";
+import ChessNavigation from "@/components/ChessNavigation";
 import MovesPanel from "@/components/MovesPanel";
 import { createMove, getMoves } from "@/api/moves";
 import type { Move } from "@/db/schema/move";
@@ -115,17 +116,18 @@ export default function ChessWorkspace() {
     <div className="flex min-h-screen">
       <main className="flex flex-1 justify-center p-6">
         <div className="w-full max-w-2xl">
-          <InteractiveBoard fen={fen} onMove={handleBoardMove} />
-
-          <ChessHistory
-            history={history}
-            currentIndex={currentIndex}
-            onMoveClick={goToMove}
-            onFirst={goToFirst}
-            onPrevious={goToPrevious}
-            onNext={goToNext}
-            onLast={goToLast}
-          />
+          <div className="space-y-1">
+            <InteractiveBoard fen={fen} onMove={handleBoardMove} />
+            <ChessNavigation
+              currentIndex={currentIndex}
+              historyLength={history.length}
+              onFirst={goToFirst}
+              onPrevious={goToPrevious}
+              onNext={goToNext}
+              onLast={goToLast}
+            />
+          </div>
+          <ChessHistory history={history} currentIndex={currentIndex} onMoveClick={goToMove} />
         </div>
       </main>
 

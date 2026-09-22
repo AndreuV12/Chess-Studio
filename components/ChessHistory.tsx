@@ -5,13 +5,9 @@ type ChessHistoryProps = {
   history: Move[];
   currentIndex: number;
   onMoveClick: (index: number) => void;
-  onFirst: () => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  onLast: () => void;
 };
 
-export default function ChessHistory({ history, currentIndex, onMoveClick, onFirst, onPrevious, onNext, onLast }: ChessHistoryProps) {
+export default function ChessHistory({ history, currentIndex, onMoveClick }: ChessHistoryProps) {
   const chess = new Chess(DEFAULT_POSITION);
 
   const playedMoves = history.map((move, index) => {
@@ -39,24 +35,6 @@ export default function ChessHistory({ history, currentIndex, onMoveClick, onFir
 
   return (
     <div className="mt-3 rounded-lg border border-zinc-200 p-3">
-      <div className="mb-3 flex justify-center gap-2">
-        <button type="button" disabled={currentIndex === -1} onClick={onFirst}>
-          |&lt;
-        </button>
-
-        <button type="button" disabled={currentIndex === -1} onClick={onPrevious}>
-          &lt;
-        </button>
-
-        <button type="button" disabled={currentIndex >= history.length - 1} onClick={onNext}>
-          &gt;
-        </button>
-
-        <button type="button" disabled={currentIndex >= history.length - 1} onClick={onLast}>
-          &gt;|
-        </button>
-      </div>
-
       <div className="space-y-1">
         {rows.map((row) => (
           <div key={row.number} className="grid grid-cols-[40px_1fr_1fr] items-center gap-2">
