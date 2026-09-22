@@ -40,7 +40,7 @@ export default function ChessHistory({ history, currentIndex, onMoveClick }: Che
           <button
             key={row.number}
             type="button"
-            onClick={() => onMoveClick(row.black.index)}
+            onClick={() => onMoveClick(row.black?.index || row.white.index)}
             className={`rounded-md px-2 py-1 text-sm transition hover:bg-zinc-200 ${
               currentIndex === row.white.index || currentIndex === row.black?.index ? "bg-zinc-200 text-zinc-950" : "bg-zinc-100 text-zinc-700"
             }`}
