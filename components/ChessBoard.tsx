@@ -14,25 +14,28 @@ type ChessBoardProps = {
 };
 
 export default function ChessBoard({ fen = DEFAULT_POSITION, selected = null, lastMove, rotated = false, onSquareClick }: ChessBoardProps) {
-  const board = useMemo(() => new Chess(fen).board(), [fen]);
+  const chess = useMemo(() => new Chess(fen), [fen]);
 
   const squares = useMemo(() => {
     const ranks = rotated ? "12345678" : "87654321";
     const files = rotated ? "hgfedcba" : "abcdefgh";
 
     return Array.from({ length: 8 }, (_, row) =>
-      Array.from({ length: 8 }, (_, col) => ({
-        square: `${files[col]}${ranks[row]}` as Square,
-        piece: board[row][col],
-      })),
+      Array.from({ length: 8 }, (_, col) => {
+        const square = `${files[col]}${ranks[row]}` as Square;
+
+        return {
+          square,
+          piece: chess.get(square),
+        };
+      }),
     ).flat();
-  }, [board, rotated]);
+  }, [chess, rotated]);
 
   function getSquareColor(square: Square, index: number) {
     const row = Math.floor(index / 8);
     const col = index % 8;
     const isLight = (row + col) % 2 === 0;
-    console.log(lastMove);
     const isLastMove = square === lastMove?.uci.slice(0, 2) || square === lastMove?.uci.slice(2, 4);
 
     if (square === selected) {

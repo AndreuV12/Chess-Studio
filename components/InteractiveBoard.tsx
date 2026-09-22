@@ -2,18 +2,26 @@
 
 import { useMemo, useState } from "react";
 import { Chess, type Move, type Square } from "chess.js";
+import { RotateCwSquare } from "lucide-react";
 import ChessBoard from "@/components/ChessBoard";
+import ChessNavigation from "@/components/ChessNavigation";
 import type { Move as MoveSchema } from "@/db/schema/move";
 
 type InteractiveBoardProps = {
   fen: string;
   lastMove?: MoveSchema;
-  rotated?: boolean;
+  currentIndex: number;
+  historyLength: number;
   onMove?: (move: Move, fen: string) => void;
+  onFirst: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  onLast: () => void;
 };
 
-export default function InteractiveBoard({ fen, lastMove, rotated = false, onMove }: InteractiveBoardProps) {
+export default function InteractiveBoard({ fen, lastMove, currentIndex, historyLength, onMove, onFirst, onPrevious, onNext, onLast }: InteractiveBoardProps) {
   const [selected, setSelected] = useState<Square | null>(null);
+  const [rotated, setRotated] = useState(false);
 
   const chess = useMemo(() => new Chess(fen), [fen]);
 
@@ -56,5 +64,21 @@ export default function InteractiveBoard({ fen, lastMove, rotated = false, onMov
     onMove?.(move, game.fen());
   }
 
-  return <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />;
+  return (
+    <div className="space-y-1">
+      <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />
+
+      <div className="flex gap-1">
+        <ChessNavigation currentIndex={currentIndex} historyLength={historyLength} onFirst={onFirst} onPrevious={onPrevious} onNext={onNext} onLast={onLast} />
+
+        <button
+          type="button"
+          onClick={() => setRotated((rotated) => !rotated)}
+          className="flex w-12 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 transition hover:bg-zinc-200"
+        >
+          <RotateCwSquare size={22} />
+        </button>
+      </div>
+    </div>
+  );
 }

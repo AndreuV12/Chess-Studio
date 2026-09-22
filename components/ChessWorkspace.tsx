@@ -118,11 +118,13 @@ export default function ChessWorkspace() {
     <div className="mx-auto w-full max-w-5xl p-6">
       <OpeningTitle fen={fen} />
       <div className="flex gap-4">
-        <div className="w-full max-w-150 space-y-1">
-          <InteractiveBoard fen={fen} onMove={handleBoardMove} lastMove={currentMove} />
-          <ChessNavigation
+        <div className="w-full max-w-150">
+          <InteractiveBoard
+            fen={fen}
+            lastMove={currentMove}
             currentIndex={currentIndex}
             historyLength={history.length}
+            onMove={handleBoardMove}
             onFirst={goToFirst}
             onPrevious={goToPrevious}
             onNext={goToNext}
