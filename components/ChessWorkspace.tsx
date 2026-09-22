@@ -20,7 +20,6 @@ export default function ChessWorkspace() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const currentMove = currentIndex >= 0 ? history[currentIndex] : undefined;
 
-  const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
   const [analysis, setAnalysis] = useState<EngineAnalysis | null>(null);
 
   const stockfishRef = useRef<Stockfish | null>(null);
@@ -178,7 +177,15 @@ export default function ChessWorkspace() {
         </div>
 
         <div className="flex-1">
-          <MovesPanel moves={availableMoves} onMoveClick={handleSavedMove} />
+          <MovesPanel
+            fen={fen}
+            moves={moves}
+            onMoveClick={handleSavedMove}
+            onDeleted={(ids) => {
+              setMoves((moves) => moves.filter((move) => !ids.includes(move.id)));
+              setHistory((history) => history.filter((move) => !ids.includes(move.id)));
+            }}
+          />
         </div>
       </div>
 
