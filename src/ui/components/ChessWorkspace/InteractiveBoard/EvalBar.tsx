@@ -13,10 +13,12 @@ export default function EvalBar({ evaluation, mate = null }: EvalBarProps) {
   const label = mate !== null ? `M${Math.abs(mate)}` : score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
 
   return (
-    <div className="relative w-10 self-stretch overflow-hidden rounded-lg border border-zinc-300 bg-zinc-900">
+    <div className="relative w-8 shrink-0 self-stretch overflow-hidden rounded-md border border-zinc-300 bg-zinc-900 sm:w-10 sm:rounded-lg">
       <div className="absolute bottom-0 left-0 w-full bg-zinc-100 transition-all duration-300" style={{ height: `${whitePercent}%` }} />
 
-      <span className={`absolute left-1/2 -translate-x-1/2 text-xs font-semibold ${whiteAdvantage ? "bottom-2 text-zinc-900" : "top-2 text-white"}`}>
+      <span
+        className={`absolute left-1/2 -translate-x-1/2 text-[10px] font-semibold sm:text-xs ${whiteAdvantage ? "bottom-1.5 text-zinc-900 sm:bottom-2" : "top-1.5 text-white sm:top-2"}`}
+      >
         {label}
       </span>
     </div>

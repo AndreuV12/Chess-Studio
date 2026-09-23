@@ -33,8 +33,8 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
   }
 
   return (
-    <div className="h-full rounded-lg border border-zinc-200 bg-white p-4">
-      <h2 className="mb-4 text-lg font-semibold">Jugadas guardadas</h2>
+    <section className="h-full min-w-0 rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
+      <h2 className="mb-3 text-base font-semibold text-zinc-900 sm:mb-4 sm:text-lg">Jugadas guardadas</h2>
 
       {moves.length === 0 ? (
         <p className="text-sm text-zinc-500">No hay jugadas guardadas desde esta posición.</p>
@@ -48,9 +48,9 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
                 <button
                   type="button"
                   onClick={() => onMoveClick?.(move)}
-                  className="flex flex-1 items-center justify-between px-3 py-2 text-left transition hover:bg-zinc-100"
+                  className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 px-3 py-2 text-left text-sm transition hover:bg-zinc-100 sm:text-base"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-medium">{getSan(move)}</span>
 
                     {descendants > 0 && (
@@ -60,14 +60,17 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
                     )}
                   </div>
 
-                  {move.evaluation !== null && <span className="text-sm font-medium text-zinc-500">{formatEvaluation(move.evaluation)}</span>}
+                  {move.evaluation !== null && (
+                    <span className="shrink-0 text-xs font-medium text-zinc-500 sm:text-sm">{formatEvaluation(move.evaluation)}</span>
+                  )}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleDelete(move)}
-                  className="flex w-10 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
+                  className="flex w-11 shrink-0 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
                   title="Eliminar variante"
+                  aria-label="Eliminar variante"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -76,6 +79,6 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

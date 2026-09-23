@@ -81,9 +81,9 @@ export default function InteractiveBoard({ fen, lastMove, children, analysis, on
 
   return (
     <div className="space-y-1">
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 sm:gap-2">
         <EvalBar evaluation={analysis?.evaluation ?? null} />
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />
         </div>
       </div>
@@ -101,7 +101,8 @@ export default function InteractiveBoard({ fen, lastMove, children, analysis, on
         <button
           type="button"
           onClick={() => setRotated((rotated) => !rotated)}
-          className="flex w-12 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 transition hover:bg-zinc-200"
+          className="flex w-12 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 transition hover:bg-zinc-200"
+          aria-label="Girar tablero"
         >
           <RotateCwSquare size={22} />
         </button>

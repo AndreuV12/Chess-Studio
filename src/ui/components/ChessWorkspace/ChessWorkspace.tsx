@@ -17,20 +17,20 @@ export default function ChessWorkspace() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-5xl p-6">
+    <main className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
       <OpeningTitle fen={fen} />
 
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div className="w-full max-w-150">
+      <div className="mx-auto grid w-full max-w-150 gap-3 sm:gap-4 lg:max-w-none lg:grid-cols-[minmax(0,600px)_minmax(0,1fr)]">
+        <div className="min-w-0">
           <InteractiveBoard fen={fen} lastMove={currentMove} analysis={analysis} children={children} onMove={applyMove} onGoToMove={goToMove} />
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0">
           <MovesPanel moves={children} onMoveClick={(move) => goToMove(move.id)} onDeleted={removeMove} />
         </div>
       </div>
 
       <ChessHistory tree={tree} currentMoveId={currentMoveId} onMoveClick={goToMove} />
-    </div>
+    </main>
   );
 }

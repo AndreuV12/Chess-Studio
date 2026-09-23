@@ -50,7 +50,7 @@ export default function ChessBoard({ fen = DEFAULT_POSITION, selected = null, la
   }
 
   return (
-    <div className="grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-lg border-4 border-gray-700">
+    <div className="grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md border-2 border-gray-700 sm:rounded-lg sm:border-4">
       {squares.map(({ square, piece }, index) => (
         <button
           key={square}

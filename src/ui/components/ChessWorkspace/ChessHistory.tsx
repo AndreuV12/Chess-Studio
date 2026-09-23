@@ -35,16 +35,16 @@ export default function ChessHistory({ tree, currentMoveId, onMoveClick }: Chess
   }
 
   return (
-    <div className="mt-3 min-h-40 rounded-lg border border-zinc-200 bg-white p-3">
-      <div className="flex flex-wrap gap-2">
+    <div className="mx-auto mt-3 min-h-28 w-full max-w-150 rounded-lg border border-zinc-200 bg-white p-2 sm:min-h-32 sm:p-3 lg:max-w-none lg:min-h-40">
+      <div className="flex flex-wrap gap-x-2 gap-y-1">
         {rows.map((row) => (
           <div key={row.number} className="flex items-center gap-1">
-            <span className="text-sm text-zinc-500">{row.number}.</span>
+            <span className="text-xs text-zinc-500 sm:text-sm">{row.number}.</span>
 
             <button
               type="button"
               onClick={() => onMoveClick(row.white.id)}
-              className={`rounded px-1.5 py-1 text-sm transition hover:bg-zinc-200 ${
+              className={`min-h-10 rounded px-2 py-1 text-sm transition hover:bg-zinc-200 ${
                 currentMoveId === row.white.id ? "bg-zinc-200 text-zinc-950" : "text-zinc-700"
               }`}
             >
@@ -55,7 +55,7 @@ export default function ChessHistory({ tree, currentMoveId, onMoveClick }: Chess
               <button
                 type="button"
                 onClick={() => onMoveClick(row.black.id)}
-                className={`rounded px-1.5 py-1 text-sm transition hover:bg-zinc-200 ${
+                className={`min-h-10 rounded px-2 py-1 text-sm transition hover:bg-zinc-200 ${
                   currentMoveId === row.black.id ? "bg-zinc-200 text-zinc-950" : "text-zinc-700"
                 }`}
               >

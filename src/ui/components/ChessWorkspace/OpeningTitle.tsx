@@ -17,8 +17,8 @@ export default function OpeningTitle({ fen }: OpeningTitleProps) {
   }, [fen]);
 
   return (
-    <div className="mb-3">
-      <h1 className="text-2xl font-semibold text-zinc-900">{opening?.name ?? "Apertura desconocida"}</h1>
+    <div className="mx-auto mb-3 w-full max-w-150 lg:max-w-none">
+      <h1 className="text-xl leading-tight font-semibold text-zinc-900 sm:text-2xl">{opening?.name ?? "Apertura desconocida"}</h1>
     </div>
   );
 }
