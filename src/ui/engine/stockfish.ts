@@ -11,6 +11,7 @@ export class Stockfish {
   private static instance: Stockfish | null = null;
   private worker: Worker;
   private ready = false;
+  private readyListeners = new Set<(isReady: boolean) => void>();
   private currentAnalysis: PendingAnalysis | null = null;
 
   private constructor() {
@@ -24,7 +25,7 @@ export class Stockfish {
       console.error("[Stockfish] Worker error", event);
       this.currentAnalysis?.reject(new Error("Stockfish worker error"));
       this.currentAnalysis = null;
-      this.ready = false;
+      this.setReady(false);
     };
 
     this.worker.postMessage("uci");
@@ -42,6 +43,22 @@ export class Stockfish {
     return this.ready;
   }
 
+  subscribeToReady(listener: (isReady: boolean) => void) {
+    this.readyListeners.add(listener);
+    listener(this.ready);
+
+    return () => {
+      this.readyListeners.delete(listener);
+    };
+  }
+
+  private setReady(isReady: boolean) {
+    if (this.ready === isReady) return;
+
+    this.ready = isReady;
+    this.readyListeners.forEach((listener) => listener(isReady));
+  }
+
   private handleMessage(message: string) {
     if (message === "uciok") {
       this.worker.postMessage("isready");
@@ -49,7 +66,7 @@ export class Stockfish {
     }
 
     if (message === "readyok") {
-      this.ready = true;
+      this.setReady(true);
       console.log("[Stockfish] Ready");
       return;
     }
@@ -153,7 +170,8 @@ export class Stockfish {
   destroy() {
     this.stop();
     this.worker.terminate();
-    this.ready = false;
+    this.setReady(false);
+    this.readyListeners.clear();
     Stockfish.instance = null;
   }
 }
