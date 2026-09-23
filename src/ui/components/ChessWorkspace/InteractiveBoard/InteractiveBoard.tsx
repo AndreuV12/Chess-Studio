@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { Chess, type Move, type Square } from "chess.js";
 import { RotateCwSquare } from "lucide-react";
-import ChessBoard from "@/ui/components/ChessBoard";
-import ChessNavigation from "@/ui/components/ChessNavigation";
-import EvalBar from "@/ui/components/EvalBar";
+import ChessBoard from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessBoard/ChessBoard";
+import ChessNavigation from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessNavigation";
+import EvalBar from "@/ui/components/ChessWorkspace/InteractiveBoard/EvalBar";
 import type { Move as MoveSchema } from "@/server/db/schema/move";
 import type { EngineAnalysis } from "@/ui/engine/types";
 

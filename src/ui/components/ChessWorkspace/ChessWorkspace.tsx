@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Stockfish } from "@/ui/engine/stockfish";
 
 import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
 import { EngineAnalysis } from "@/ui/engine/types";
 
-import InteractiveBoard from "@/ui/components/InteractiveBoard";
-import ChessHistory from "@/ui/components/ChessHistory";
-import MovesPanel from "@/ui/components/MovesPanel";
-import OpeningTitle from "@/ui/components/OpeningTitle";
+import InteractiveBoard from "@/ui/components/ChessWorkspace/InteractiveBoard/InteractiveBoard";
+import ChessHistory from "@/ui/components/ChessWorkspace/ChessHistory";
+import MovesPanel from "@/ui/components/ChessWorkspace/MovesPanel";
+import OpeningTitle from "@/ui/components/ChessWorkspace/OpeningTitle";
 import { createMove, getMoves, updateMoveEvaluation } from "@/ui/api/moves";
 import type { Move } from "@/server/db/schema/move";
 
