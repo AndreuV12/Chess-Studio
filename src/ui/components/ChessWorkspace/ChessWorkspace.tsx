@@ -20,7 +20,7 @@ export default function ChessWorkspace() {
     <div className="mx-auto w-full max-w-5xl p-6">
       <OpeningTitle fen={fen} />
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
         <div className="w-full max-w-150">
           <InteractiveBoard fen={fen} lastMove={currentMove} analysis={analysis} children={children} onMove={applyMove} onGoToMove={goToMove} />
         </div>

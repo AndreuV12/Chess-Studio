@@ -7,6 +7,8 @@ type PendingAnalysis = {
   latest: EngineAnalysis;
 };
 
+const MAX_EVALUATION = 100;
+
 export class Stockfish {
   private static instance: Stockfish | null = null;
   private worker: Worker;
@@ -94,8 +96,9 @@ export class Stockfish {
     }
 
     if (mateMatch) {
-      this.currentAnalysis.latest.mate = Number(mateMatch[1]) * multiplier;
-      this.currentAnalysis.latest.evaluation = null;
+      const mate = Number(mateMatch[1]) * multiplier;
+      this.currentAnalysis.latest.mate = mate;
+      this.currentAnalysis.latest.evaluation = Math.sign(mate) * MAX_EVALUATION;
     }
 
     if (pvMatch) {
