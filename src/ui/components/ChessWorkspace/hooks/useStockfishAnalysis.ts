@@ -53,6 +53,6 @@ export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: 
     return () => {
       stockfish.stop();
     };
-  }, [currentMove]);
+  }, [currentMove, fen]);
   return analysis;
 }
