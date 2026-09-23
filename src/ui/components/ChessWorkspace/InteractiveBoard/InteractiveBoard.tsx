@@ -1,39 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chess, type Move, type Square } from "chess.js";
+import { Chess, type Move as ChessMove, type Square } from "chess.js";
 import { RotateCwSquare } from "lucide-react";
 import ChessBoard from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessBoard/ChessBoard";
 import ChessNavigation from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessNavigation";
 import EvalBar from "@/ui/components/ChessWorkspace/InteractiveBoard/EvalBar";
-import type { Move as MoveSchema } from "@/server/db/schema/move";
+import type { Move } from "@/types/move.types";
+import type { MoveNode } from "@/ui/utils/moveTree";
 import type { EngineAnalysis } from "@/ui/engine/types";
 
 type InteractiveBoardProps = {
   fen: string;
-  lastMove?: MoveSchema;
+  lastMove?: Move;
+  children: MoveNode[];
   analysis?: EngineAnalysis | null;
-  currentIndex: number;
-  historyLength: number;
-  onMove?: (move: Move, fen: string) => void;
-  onFirst: () => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  onLast: () => void;
+  onMove?: (move: ChessMove, fen: string) => void;
+  onGoToMove: (moveId: number | null) => void;
 };
 
-export default function InteractiveBoard({
-  fen,
-  lastMove,
-  analysis,
-  currentIndex,
-  historyLength,
-  onMove,
-  onFirst,
-  onPrevious,
-  onNext,
-  onLast,
-}: InteractiveBoardProps) {
+export default function InteractiveBoard({ fen, lastMove, children, analysis, onMove, onGoToMove }: InteractiveBoardProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const [rotated, setRotated] = useState(false);
   const chess = useMemo(() => new Chess(fen), [fen]);
@@ -75,18 +61,42 @@ export default function InteractiveBoard({
     onMove?.(move, game.fen());
   }
 
+  function goToFirst() {
+    onGoToMove(null);
+  }
+
+  function goToPrevious() {
+    onGoToMove(lastMove?.parentId ?? null);
+  }
+
+  function goToNext() {
+    const next = getLongestNode(children);
+    if (next) onGoToMove(next.id);
+  }
+
+  function goToLast() {
+    const last = getLastNode(children);
+    if (last) onGoToMove(last.id);
+  }
+
   return (
     <div className="space-y-1">
-      <div className="flex gap-2 border">
+      <div className="flex gap-2">
         <EvalBar evaluation={analysis?.evaluation ?? null} />
-
         <div className="flex-1">
           <ChessBoard fen={fen} selected={selected} lastMove={lastMove} rotated={rotated} onSquareClick={handleSquareClick} />
         </div>
       </div>
 
       <div className="flex gap-1">
-        <ChessNavigation currentIndex={currentIndex} historyLength={historyLength} onFirst={onFirst} onPrevious={onPrevious} onNext={onNext} onLast={onLast} />
+        <ChessNavigation
+          canGoPrevious={!!lastMove}
+          canGoNext={children.length > 0}
+          onFirst={goToFirst}
+          onPrevious={goToPrevious}
+          onNext={goToNext}
+          onLast={goToLast}
+        />
 
         <button
           type="button"
@@ -98,4 +108,25 @@ export default function InteractiveBoard({
       </div>
     </div>
   );
+}
+
+function getLongestNode(nodes: MoveNode[]): MoveNode | undefined {
+  return nodes.reduce<MoveNode | undefined>((longest, node) => {
+    if (!longest) return node;
+    return getDepth(node) > getDepth(longest) ? node : longest;
+  }, undefined);
+}
+
+function getLastNode(nodes: MoveNode[]): MoveNode | undefined {
+  let node = getLongestNode(nodes);
+  if (!node) return;
+  while (node.children.length > 0) {
+    node = getLongestNode(node.children)!;
+  }
+  return node;
+}
+
+function getDepth(node: MoveNode): number {
+  if (node.children.length === 0) return 1;
+  return 1 + Math.max(...node.children.map(getDepth));
 }

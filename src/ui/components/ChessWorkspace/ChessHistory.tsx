@@ -1,16 +1,17 @@
 import { Chess, DEFAULT_POSITION, type Square } from "chess.js";
-import type { Move } from "@/server/db/schema/move";
+import type { MoveNode } from "@/ui/utils/moveTree";
 
 type ChessHistoryProps = {
-  history: Move[];
-  currentIndex: number;
-  onMoveClick: (index: number) => void;
+  tree: MoveNode[];
+  currentMoveId: number | null;
+  onMoveClick: (moveId: number) => void;
 };
 
-export default function ChessHistory({ history, currentIndex, onMoveClick }: ChessHistoryProps) {
+export default function ChessHistory({ tree, currentMoveId, onMoveClick }: ChessHistoryProps) {
+  const line = buildVisibleLine(tree, currentMoveId);
   const chess = new Chess(DEFAULT_POSITION);
 
-  const playedMoves = history.map((move, index) => {
+  const playedMoves = line.map((move) => {
     const chessMove = chess.move({
       from: move.uci.slice(0, 2) as Square,
       to: move.uci.slice(2, 4) as Square,
@@ -18,7 +19,7 @@ export default function ChessHistory({ history, currentIndex, onMoveClick }: Che
     });
 
     return {
-      index,
+      id: move.id,
       san: chessMove.san,
     };
   });
@@ -37,20 +38,99 @@ export default function ChessHistory({ history, currentIndex, onMoveClick }: Che
     <div className="mt-3 min-h-40 rounded-lg border border-zinc-200 bg-white p-3">
       <div className="flex flex-wrap gap-2">
         {rows.map((row) => (
-          <button
-            key={row.number}
-            type="button"
-            onClick={() => onMoveClick(row.black?.index || row.white.index)}
-            className={`rounded-md px-2 py-1 text-sm transition hover:bg-zinc-200 ${
-              currentIndex === row.white.index || currentIndex === row.black?.index ? "bg-zinc-200 text-zinc-950" : "bg-zinc-100 text-zinc-700"
-            }`}
-          >
-            <span className="mr-1 text-zinc-500">{row.number}.</span>
-            {row.white.san}
-            {row.black && ` ${row.black.san}`}
-          </button>
+          <div key={row.number} className="flex items-center gap-1">
+            <span className="text-sm text-zinc-500">{row.number}.</span>
+
+            <button
+              type="button"
+              onClick={() => onMoveClick(row.white.id)}
+              className={`rounded px-1.5 py-1 text-sm transition hover:bg-zinc-200 ${
+                currentMoveId === row.white.id ? "bg-zinc-200 text-zinc-950" : "text-zinc-700"
+              }`}
+            >
+              {row.white.san}
+            </button>
+
+            {row.black && (
+              <button
+                type="button"
+                onClick={() => onMoveClick(row.black.id)}
+                className={`rounded px-1.5 py-1 text-sm transition hover:bg-zinc-200 ${
+                  currentMoveId === row.black.id ? "bg-zinc-200 text-zinc-950" : "text-zinc-700"
+                }`}
+              >
+                {row.black.san}
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>
   );
+}
+
+function buildVisibleLine(tree: MoveNode[], currentMoveId: number | null): MoveNode[] {
+  if (tree.length === 0) return [];
+
+  if (currentMoveId === null) {
+    const root = getLongestNode(tree);
+    return root ? [root, ...getLongestContinuation(root)] : [];
+  }
+
+  const path = findPath(tree, currentMoveId);
+  if (!path) return [];
+
+  const currentMove = path[path.length - 1];
+
+  return [...path, ...getLongestContinuation(currentMove)];
+}
+
+function findPath(nodes: MoveNode[], moveId: number, path: MoveNode[] = []): MoveNode[] | null {
+  for (const node of nodes) {
+    const nextPath = [...path, node];
+
+    if (node.id === moveId) {
+      return nextPath;
+    }
+
+    const found = findPath(node.children, moveId, nextPath);
+
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+function getLongestContinuation(node: MoveNode): MoveNode[] {
+  if (node.children.length === 0) return [];
+
+  const child = getLongestNode(node.children);
+
+  if (!child) return [];
+
+  return [child, ...getLongestContinuation(child)];
+}
+
+function getLongestNode(nodes: MoveNode[]): MoveNode | undefined {
+  let longestNode: MoveNode | undefined;
+  let longestDepth = -1;
+
+  for (const node of nodes) {
+    const depth = getDepth(node);
+
+    if (depth > longestDepth) {
+      longestDepth = depth;
+      longestNode = node;
+    }
+  }
+
+  return longestNode;
+}
+
+function getDepth(node: MoveNode): number {
+  if (node.children.length === 0) return 1;
+
+  return 1 + Math.max(...node.children.map(getDepth));
 }

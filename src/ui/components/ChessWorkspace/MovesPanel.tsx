@@ -1,32 +1,15 @@
-import { useMemo } from "react";
 import { Chess, type Square } from "chess.js";
 import { Trash2 } from "lucide-react";
-import type { Move } from "@/server/db/schema/move";
-// import { deleteMoveBranch } from "@/api/moves";
+import type { MoveNode } from "@/ui/utils/moveTree";
 
 type MovesPanelProps = {
-  fen: string;
-  moves: Move[];
-  onMoveClick?: (move: Move) => void;
-  onDeleted?: (ids: number[]) => void;
+  moves: MoveNode[];
+  onMoveClick?: (move: MoveNode) => void;
+  onDeleted?: (moveId: number) => void;
 };
 
-export default function MovesPanel({ fen, moves, onMoveClick, onDeleted }: MovesPanelProps) {
-  const availableMoves = useMemo(() => moves.filter((move) => move.fenFrom === fen), [moves, fen]);
-
-  const movesByFen = useMemo(() => {
-    const map = new Map<string, Move[]>();
-
-    for (const move of moves) {
-      const children = map.get(move.fenFrom) ?? [];
-      children.push(move);
-      map.set(move.fenFrom, children);
-    }
-
-    return map;
-  }, [moves]);
-
-  function getSan(move: Move) {
+export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanelProps) {
+  function getSan(move: MoveNode) {
     const chess = new Chess(move.fenFrom);
     const chessMove = chess.move({
       from: move.uci.slice(0, 2) as Square,
@@ -37,43 +20,27 @@ export default function MovesPanel({ fen, moves, onMoveClick, onDeleted }: Moves
     return chessMove.san;
   }
 
-  function getDescendantCount(move: Move) {
-    const visited = new Set<number>();
-
-    function walk(current: Move) {
-      if (visited.has(current.id)) return;
-      visited.add(current.id);
-
-      const children = movesByFen.get(current.fenTo) ?? [];
-
-      for (const child of children) {
-        walk(child);
-      }
-    }
-
-    walk(move);
-
-    return visited.size - 1;
+  function getDescendantCount(move: MoveNode): number {
+    return move.children.reduce((total, child) => total + 1 + getDescendantCount(child), 0);
   }
 
   function formatEvaluation(evaluation: number) {
     return evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
   }
 
-  async function handleDelete(move: Move) {
-    // const deletedIds = await deleteMoveBranch(move.id);
-    // onDeleted?.(deletedIds);
+  async function handleDelete(move: MoveNode) {
+    onDeleted?.(move.id);
   }
 
   return (
     <div className="h-full rounded-lg border border-zinc-200 bg-white p-4">
       <h2 className="mb-4 text-lg font-semibold">Jugadas guardadas</h2>
 
-      {availableMoves.length === 0 ? (
+      {moves.length === 0 ? (
         <p className="text-sm text-zinc-500">No hay jugadas guardadas desde esta posición.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {availableMoves.map((move) => {
+          {moves.map((move) => {
             const descendants = getDescendantCount(move);
 
             return (
@@ -85,6 +52,7 @@ export default function MovesPanel({ fen, moves, onMoveClick, onDeleted }: Moves
                 >
                   <div>
                     <span className="font-medium">{getSan(move)}</span>
+
                     {descendants > 0 && (
                       <span className="ml-2 text-xs text-zinc-400">
                         +{descendants} {descendants === 1 ? "jugada" : "jugadas"}
