@@ -102,6 +102,7 @@ export default function ChessWorkspace() {
         fenFrom,
         fenTo,
         uci,
+        userId: 1,
         evaluation: null,
       });
 
