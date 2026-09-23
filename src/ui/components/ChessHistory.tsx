@@ -1,5 +1,5 @@
 import { Chess, DEFAULT_POSITION, type Square } from "chess.js";
-import type { Move } from "@/db/schema/move";
+import type { Move } from "@/server/db/schema/move";
 
 type ChessHistoryProps = {
   history: Move[];

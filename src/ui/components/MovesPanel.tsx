@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Chess, type Square } from "chess.js";
 import { Trash2 } from "lucide-react";
-import type { Move } from "@/db/schema/move";
+import type { Move } from "@/server/db/schema/move";
 // import { deleteMoveBranch } from "@/api/moves";
 
 type MovesPanelProps = {

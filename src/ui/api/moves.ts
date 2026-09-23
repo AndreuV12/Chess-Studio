@@ -1,5 +1,5 @@
 // api/moves.ts
-import type { CreateMove, Move } from "@/db/schema/move";
+import type { CreateMove, Move } from "@/server/db/schema/move";
 import { api } from "./client";
 
 export async function getMoves(): Promise<Move[]> {

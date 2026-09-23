@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { Chess, DEFAULT_POSITION, type Square } from "chess.js";
-import ChessPiece from "@/components/ChessPiece";
-import type { Move } from "@/db/schema/move";
+import ChessPiece from "@/ui/components/ChessPiece";
+import type { Move } from "@/server/db/schema/move";
 
 type ChessBoardProps = {
   fen?: string;
