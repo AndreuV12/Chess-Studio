@@ -15,7 +15,7 @@ type ChessWorkspaceProps = {
 export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
   const { tree, moves, currentMove, currentMoveId, children, fen, applyMove, goToMove, updateMoveEvaluation, removeMove } = useChessWorkspace();
 
-  const analysis = useStockfishAnalysis({
+  const stockfish = useStockfishAnalysis({
     fen,
     currentMove,
     onEvaluationUpdated: updateMoveEvaluation,
@@ -23,12 +23,12 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
-      <WorkspaceHeader user={user} />
+      <WorkspaceHeader user={user} isStockfishReady={stockfish.isReady} />
       <OpeningTitle fen={fen} />
 
       <div className="mx-auto grid w-full max-w-150 gap-3 sm:gap-4 lg:max-w-none lg:grid-cols-[minmax(0,600px)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <InteractiveBoard fen={fen} lastMove={currentMove} analysis={analysis} children={children} onMove={applyMove} onGoToMove={goToMove} />
+          <InteractiveBoard fen={fen} lastMove={currentMove} analysis={stockfish.analysis} children={children} onMove={applyMove} onGoToMove={goToMove} />
         </div>
 
         <div className="min-w-0">

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
+import StockfishStatusChip from "./StockfishStatusChip";
 
 export type WorkspaceUser = {
   name: string | null;
@@ -12,6 +13,7 @@ export type WorkspaceUser = {
 
 type WorkspaceHeaderProps = {
   user: WorkspaceUser;
+  isStockfishReady: boolean;
 };
 
 type AccountMenuState = {
@@ -24,7 +26,7 @@ const initialState: AccountMenuState = {
   isSigningOut: false,
 };
 
-export default function WorkspaceHeader({ user }: WorkspaceHeaderProps) {
+export default function WorkspaceHeader({ user, isStockfishReady }: WorkspaceHeaderProps) {
   const [state, setState] = useState<AccountMenuState>(initialState);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -64,7 +66,7 @@ export default function WorkspaceHeader({ user }: WorkspaceHeaderProps) {
   }
 
   return (
-    <header className="mx-auto mb-5 flex w-full max-w-150 items-center justify-between border-b border-zinc-200 pb-4 lg:max-w-none">
+    <header className="mx-auto mb-5 flex w-full max-w-150 flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-center sm:justify-between lg:max-w-none">
       <div className="flex items-center gap-3">
         <Image src="/logo.png" alt="Chess Studio" width={44} height={44} priority className="h-11 w-11 object-contain" />
         <div>
@@ -73,42 +75,46 @@ export default function WorkspaceHeader({ user }: WorkspaceHeaderProps) {
         </div>
       </div>
 
-      <div ref={menuRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setState((current) => ({ ...current, isOpen: !current.isOpen }))}
-          className="flex max-w-48 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:max-w-64"
-          aria-label="Abrir menú de usuario"
-          aria-haspopup="menu"
-          aria-expanded={state.isOpen}
-        >
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-zinc-900">{user.name ?? user.email}</p>
-            {user.name && <p className="hidden truncate text-xs text-zinc-500 sm:block">{user.email}</p>}
-          </div>
-          <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden="true" />
-        </button>
+      <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
+        <StockfishStatusChip isReady={isStockfishReady} />
 
-        {state.isOpen && (
-          <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
-            <div className="border-b border-zinc-200 px-4 py-3">
+        <div ref={menuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setState((current) => ({ ...current, isOpen: !current.isOpen }))}
+            className="flex max-w-48 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:max-w-64"
+            aria-label="Abrir menú de usuario"
+            aria-haspopup="menu"
+            aria-expanded={state.isOpen}
+          >
+            <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-zinc-900">{user.name ?? user.email}</p>
-              <p className="mt-1 truncate text-sm text-zinc-500">{user.email}</p>
+              {user.name && <p className="hidden truncate text-xs text-zinc-500 sm:block">{user.email}</p>}
             </div>
-            <div className="p-2">
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => void handleSignOut()}
-                disabled={state.isSigningOut}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                {state.isSigningOut ? "Cerrando sesión..." : "Cerrar sesión"}
-              </button>
+            <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden="true" />
+          </button>
+
+          {state.isOpen && (
+            <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
+              <div className="border-b border-zinc-200 px-4 py-3">
+                <p className="truncate text-sm font-semibold text-zinc-900">{user.name ?? user.email}</p>
+                <p className="mt-1 truncate text-sm text-zinc-500">{user.email}</p>
+              </div>
+              <div className="p-2">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void handleSignOut()}
+                  disabled={state.isSigningOut}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {state.isSigningOut ? "Cerrando sesión..." : "Cerrar sesión"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

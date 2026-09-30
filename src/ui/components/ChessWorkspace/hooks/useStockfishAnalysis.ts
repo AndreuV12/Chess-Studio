@@ -10,36 +10,61 @@ type UseStockfishAnalysisProps = {
 };
 
 export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: UseStockfishAnalysisProps) {
-  const [analysis, setAnalysis] = useState<EngineAnalysis | null>(null);
+  const [state, setState] = useState<{
+    analysis: EngineAnalysis | null;
+    isReady: boolean;
+  }>({
+    analysis: null,
+    isReady: false,
+  });
   const stockfishRef = useRef<Stockfish | null>(null);
+
   useEffect(() => {
-    stockfishRef.current = Stockfish.getInstance();
+    const stockfish = Stockfish.getInstance();
+    stockfishRef.current = stockfish;
+
+    const unsubscribe = stockfish.subscribeToReadyState((isReady) => {
+      setState((current) => ({ ...current, isReady }));
+    });
+
     return () => {
-      stockfishRef.current?.stop();
+      unsubscribe();
+      stockfish.stop();
     };
   }, []);
 
   useEffect(() => {
     const stockfish = stockfishRef.current;
     if (!stockfish || !currentMove) {
-      setAnalysis(null);
+      setState((current) => ({ ...current, analysis: null }));
       return;
     }
+
     if (currentMove.evaluation !== null) {
-      setAnalysis({
-        depth: 0,
-        evaluation: currentMove.evaluation,
-        mate: null,
-        bestMove: null,
-        pv: [],
-      });
+      setState((current) => ({
+        ...current,
+        analysis: {
+          depth: 0,
+          evaluation: currentMove.evaluation,
+          mate: null,
+          bestMove: null,
+          pv: [],
+        },
+      }));
+      return;
+    }
+
+    if (!stockfish.isReady()) {
+      setState((current) => ({ ...current, analysis: null }));
       return;
     }
 
     stockfish
       .analyze(fen, { depth: 18 })
       .then(async (analysis) => {
-        setAnalysis(analysis);
+        if (!analysis) return;
+
+        setState((current) => ({ ...current, analysis }));
         if (analysis.evaluation !== null) {
           await onEvaluationUpdated(currentMove.id, analysis.evaluation);
         }
@@ -54,5 +79,6 @@ export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: 
       stockfish.stop();
     };
   }, [currentMove, fen]);
-  return analysis;
+
+  return state;
 }
