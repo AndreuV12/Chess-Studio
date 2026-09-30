@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Stockfish } from "@/ui/engine/stockfish";
 import type { EngineAnalysis } from "@/ui/engine/types";
-import type { Move } from "@/types/move.types";
+import type { MoveResponse } from "@/app/api/moves/schemas";
 
 type UseStockfishAnalysisProps = {
   fen: string;
-  currentMove?: Move;
+  currentMove?: MoveResponse;
   onEvaluationUpdated: (moveId: number, evaluation: number) => Promise<void>;
 };
 

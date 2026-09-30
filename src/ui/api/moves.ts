@@ -1,20 +1,25 @@
-// api/moves.ts
-import type { Move, CreateMove, DeleteMoveResponse } from "@/types/move.types";
+import type {
+  CreateMoveRequest,
+  DeleteMoveResponse,
+  MoveResponse,
+  UpdateMoveRequest,
+} from "@/app/api/moves/schemas";
 import { api } from "./client";
 
 export const MovesApi = {
-  async getAll(): Promise<Move[]> {
-    const { data } = await api.get<Move[]>("/moves");
+  async getAll(): Promise<MoveResponse[]> {
+    const { data } = await api.get<MoveResponse[]>("/moves");
     return data;
   },
 
-  async create(move: CreateMove): Promise<Move> {
-    const { data } = await api.post<Move>("/moves", move);
+  async create(move: CreateMoveRequest): Promise<MoveResponse> {
+    const { data } = await api.post<MoveResponse>("/moves", move);
     return data;
   },
 
-  async updateEvaluation(id: number, evaluation: number): Promise<Move> {
-    const { data } = await api.patch<Move>(`/moves/${id}`, { evaluation });
+  async updateEvaluation(id: number, evaluation: number): Promise<MoveResponse> {
+    const request: UpdateMoveRequest = { evaluation };
+    const { data } = await api.patch<MoveResponse>(`/moves/${id}`, request);
     return data;
   },
 

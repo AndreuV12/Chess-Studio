@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 import { Chess, DEFAULT_POSITION, type Square } from "chess.js";
 import ChessPiece from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessBoard/ChessPiece";
-import type { Move } from "@/types/move.types";
+import type { MoveResponse } from "@/app/api/moves/schemas";
 
 type ChessBoardProps = {
   fen?: string;
   selected?: Square | null;
-  lastMove?: Move;
+  lastMove?: MoveResponse;
   rotated?: boolean;
   onSquareClick?: (square: Square) => void;
 };

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import type { LoginFields } from "@/types/auth.types";
+import type { LoginRequest } from "@/app/api/auth/schemas";
 import AuthCard from "./AuthCard";
 import LoginForm from "./LoginForm";
 
@@ -12,7 +12,7 @@ type LoginViewProps = {
 };
 
 type LoginState = {
-  fields: LoginFields;
+  fields: LoginRequest;
   isSubmitting: boolean;
   error: string | null;
 };
@@ -30,7 +30,7 @@ export default function LoginView({ callbackUrl }: LoginViewProps) {
   const router = useRouter();
   const [state, setState] = useState<LoginState>(initialState);
 
-  function updateField(field: keyof LoginFields, value: string) {
+  function updateField(field: keyof LoginRequest, value: string) {
     setState((current) => ({
       ...current,
       fields: { ...current.fields, [field]: value },

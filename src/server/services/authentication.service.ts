@@ -1,18 +1,11 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { users } from "@/server/db/schema/user";
-import { AuthValidationService } from "./authValidation.service";
-
-export type AuthenticatedUser = {
-  id: string;
-  name: string | null;
-  email: string;
-};
+import { users, type NewUser, type User } from "@/server/db/schema/user";
 
 export type RegistrationResult =
-  | { success: true; user: AuthenticatedUser }
-  | { success: false; reason: "INVALID_DATA" | "EMAIL_ALREADY_EXISTS" };
+  | { success: true; user: User }
+  | { success: false; reason: "EMAIL_ALREADY_EXISTS" };
 
 const dummyPasswordHash = "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.";
 
@@ -21,54 +14,33 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 export class AuthenticationService {
-  static async authenticate(credentials: unknown): Promise<AuthenticatedUser | null> {
-    const validatedCredentials = AuthValidationService.validateCredentials(credentials);
-    if (!validatedCredentials) return null;
-
-    const [existingUser] = await db.select().from(users).where(eq(users.email, validatedCredentials.email)).limit(1);
+  static async authenticate(email: User["email"], password: string): Promise<User | null> {
+    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     const passwordHash = existingUser?.passwordHash ?? dummyPasswordHash;
-    const isPasswordValid = await bcrypt.compare(validatedCredentials.password, passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, passwordHash);
 
     if (!existingUser || !isPasswordValid) return null;
 
-    return {
-      id: String(existingUser.id),
-      name: existingUser.name,
-      email: existingUser.email,
-    };
+    return existingUser;
   }
 
-  static async register(data: unknown): Promise<RegistrationResult> {
-    const validatedData = AuthValidationService.validateRegistration(data);
-    if (!validatedData) return { success: false, reason: "INVALID_DATA" };
-
-    const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, validatedData.email)).limit(1);
+  static async register(data: Pick<NewUser, "name" | "email">, password: string): Promise<RegistrationResult> {
+    const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
     if (existingUser) return { success: false, reason: "EMAIL_ALREADY_EXISTS" };
 
-    const passwordHash = await bcrypt.hash(validatedData.password, 12);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     try {
       const [createdUser] = await db
         .insert(users)
         .values({
-          name: validatedData.name,
-          email: validatedData.email,
+          name: data.name,
+          email: data.email,
           passwordHash,
         })
-        .returning({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-        });
+        .returning();
 
-      return {
-        success: true,
-        user: {
-          id: String(createdUser.id),
-          name: createdUser.name,
-          email: createdUser.email,
-        },
-      };
+      return { success: true, user: createdUser };
     } catch (error) {
       if (isUniqueViolation(error)) return { success: false, reason: "EMAIL_ALREADY_EXISTS" };
       throw error;

@@ -1,9 +1,9 @@
-import type { RegisterFields, RegistrationResponse } from "@/types/auth.types";
+import type { RegisterRequest, RegisterResponse } from "@/app/api/register/schemas";
 import { api } from "./client";
 
 export const AuthApi = {
-  async register(fields: RegisterFields): Promise<RegistrationResponse> {
-    const { data } = await api.post<RegistrationResponse>("/register", fields);
+  async register(fields: RegisterRequest): Promise<RegisterResponse> {
+    const { data } = await api.post<RegisterResponse>("/register", fields);
     return data;
   },
 };

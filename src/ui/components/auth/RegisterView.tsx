@@ -4,7 +4,8 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import type { ApiErrorResponse, RegisterFields } from "@/types/auth.types";
+import type { ApiErrorResponse } from "@/app/api/schemas";
+import type { RegisterRequest } from "@/app/api/register/schemas";
 import { AuthApi } from "@/ui/api/auth";
 import AuthCard from "./AuthCard";
 import RegisterForm from "./RegisterForm";
@@ -14,7 +15,7 @@ type RegisterViewProps = {
 };
 
 type RegisterState = {
-  fields: RegisterFields;
+  fields: RegisterRequest;
   isSubmitting: boolean;
   error: string | null;
 };
@@ -34,7 +35,7 @@ export default function RegisterView({ callbackUrl }: RegisterViewProps) {
   const router = useRouter();
   const [state, setState] = useState<RegisterState>(initialState);
 
-  function updateField(field: keyof RegisterFields, value: string) {
+  function updateField(field: keyof RegisterRequest, value: string) {
     setState((current) => ({
       ...current,
       fields: { ...current.fields, [field]: value },

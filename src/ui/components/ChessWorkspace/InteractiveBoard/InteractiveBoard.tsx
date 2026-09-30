@@ -6,13 +6,13 @@ import { RotateCwSquare } from "lucide-react";
 import ChessBoard from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessBoard/ChessBoard";
 import ChessNavigation from "@/ui/components/ChessWorkspace/InteractiveBoard/ChessNavigation";
 import EvalBar from "@/ui/components/ChessWorkspace/InteractiveBoard/EvalBar";
-import type { Move } from "@/types/move.types";
+import type { MoveResponse } from "@/app/api/moves/schemas";
 import type { MoveNode } from "@/ui/utils/moveTree";
 import type { EngineAnalysis } from "@/ui/engine/types";
 
 type InteractiveBoardProps = {
   fen: string;
-  lastMove?: Move;
+  lastMove?: MoveResponse;
   children: MoveNode[];
   analysis?: EngineAnalysis | null;
   onMove?: (move: ChessMove, fen: string) => void;

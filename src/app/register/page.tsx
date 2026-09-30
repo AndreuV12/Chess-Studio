@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { callbackUrlSchema } from "@/app/api/auth/schemas";
 import { auth } from "@/server/auth";
-import { AuthValidationService } from "@/server/services/authValidation.service";
 import RegisterView from "@/ui/components/auth/RegisterView";
 
 export const metadata: Metadata = {
@@ -20,5 +20,5 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
   const { callbackUrl } = await searchParams;
 
-  return <RegisterView callbackUrl={AuthValidationService.getSafeCallbackUrl(callbackUrl)} />;
+  return <RegisterView callbackUrl={callbackUrlSchema.parse(callbackUrl)} />;
 }

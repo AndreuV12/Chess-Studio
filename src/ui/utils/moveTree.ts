@@ -1,10 +1,10 @@
-import type { Move } from "@/types/move.types";
+import type { MoveResponse } from "@/app/api/moves/schemas";
 
-export type MoveNode = Move & {
+export type MoveNode = MoveResponse & {
   children: MoveNode[];
 };
 
-export function buildMoveTree(moves: Move[]): MoveNode[] {
+export function buildMoveTree(moves: MoveResponse[]): MoveNode[] {
   const nodes = new Map<number, MoveNode>();
   for (const move of moves) {
     nodes.set(move.id, {
@@ -34,9 +34,9 @@ export function findMoveNode(tree: MoveNode[], moveId: number): MoveNode | undef
   }
 }
 
-export function getMovePath(tree: MoveNode[], moveId: number | null): Move[] {
+export function getMovePath(tree: MoveNode[], moveId: number | null): MoveResponse[] {
   if (moveId === null) return [];
-  function walk(nodes: MoveNode[], path: Move[]): Move[] | null {
+  function walk(nodes: MoveNode[], path: MoveResponse[]): MoveResponse[] | null {
     for (const node of nodes) {
       const nextPath = [...path, node];
       if (node.id === moveId) {

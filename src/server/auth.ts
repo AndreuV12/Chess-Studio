@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { loginRequestSchema } from "@/app/api/auth/schemas";
 import { AuthenticationService } from "@/server/services/authentication.service";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -26,7 +27,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        return AuthenticationService.authenticate(credentials);
+        const result = loginRequestSchema.safeParse({
+          email: credentials?.email,
+          password: credentials?.password,
+        });
+        if (!result.success) return null;
+
+        const user = await AuthenticationService.authenticate(result.data.email, result.data.password);
+        if (!user) return null;
+
+        return {
+          id: String(user.id),
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],

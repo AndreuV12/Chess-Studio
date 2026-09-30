@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
-import type { LoginFields } from "@/types/auth.types";
+import type { LoginRequest } from "@/app/api/auth/schemas";
 
 type LoginFormProps = {
-  fields: LoginFields;
+  fields: LoginRequest;
   isSubmitting: boolean;
   error: string | null;
   registerHref: string;
-  onFieldChange: (field: keyof LoginFields, value: string) => void;
+  onFieldChange: (field: keyof LoginRequest, value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
 };
 

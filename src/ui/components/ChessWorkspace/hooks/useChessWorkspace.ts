@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
+import type { MoveResponse } from "@/app/api/moves/schemas";
 import { MovesApi } from "@/ui/api/moves";
-import type { Move } from "@/types/move.types";
 import { buildMoveTree, findMoveNode, getMovePath } from "@/ui/utils/moveTree";
 
 export function useChessWorkspace() {
-  const [moves, setMoves] = useState<Move[]>([]);
+  const [moves, setMoves] = useState<MoveResponse[]>([]);
   const [currentMoveId, setCurrentMoveId] = useState<number | null>(null);
 
   const tree = useMemo(() => buildMoveTree(moves), [moves]);

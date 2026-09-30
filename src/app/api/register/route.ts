@@ -1,23 +1,32 @@
+import { NextResponse } from "next/server";
+import { ApiValidationService } from "@/server/services/apiValidation.service";
 import { AuthenticationService } from "@/server/services/authentication.service";
+import { registerRequestSchema, type RegisterResponse } from "./schemas";
 
 export async function POST(request: Request) {
-  let data: unknown;
+  const { data, errorResponse } = await ApiValidationService.validateJson(registerRequestSchema, request);
+  if (errorResponse) return errorResponse;
 
-  try {
-    data = await request.json();
-  } catch {
-    return Response.json({ error: "La solicitud no contiene un JSON válido." }, { status: 400 });
-  }
-
-  const result = await AuthenticationService.register(data);
+  const result = await AuthenticationService.register(
+    {
+      name: data.name,
+      email: data.email,
+    },
+    data.password,
+  );
 
   if (!result.success) {
-    if (result.reason === "EMAIL_ALREADY_EXISTS") {
-      return Response.json({ error: "Ya existe una cuenta con este correo electrónico." }, { status: 409 });
-    }
-
-    return Response.json({ error: "Revisa los datos del formulario." }, { status: 400 });
+    return NextResponse.json({ error: "Ya existe una cuenta con este correo electrónico." }, { status: 409 });
   }
 
-  return Response.json({ user: result.user }, { status: 201 });
+  return NextResponse.json<RegisterResponse>(
+    {
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+      },
+    },
+    { status: 201 },
+  );
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { callbackUrlSchema } from "@/app/api/auth/schemas";
 import { auth } from "@/server/auth";
-import { AuthValidationService } from "@/server/services/authValidation.service";
 import LoginView from "@/ui/components/auth/LoginView";
 
 export const metadata: Metadata = {
@@ -20,5 +20,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   const { callbackUrl } = await searchParams;
 
-  return <LoginView callbackUrl={AuthValidationService.getSafeCallbackUrl(callbackUrl)} />;
+  return <LoginView callbackUrl={callbackUrlSchema.parse(callbackUrl)} />;
 }
