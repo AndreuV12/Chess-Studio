@@ -1,11 +1,24 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema/user";
+import { AuthenticationService } from "@/server/services/authentication.service";
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
+  pages: {
+    signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
+
+      return session;
+    },
+  },
   providers: [
     Credentials({
       credentials: {
@@ -13,25 +26,7 @@ export const { auth, signIn, signOut } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-        const email = String(credentials.email);
-        const password = String(credentials.password);
-
-        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-
-        if (!user) return null;
-
-        const validPassword = await bcrypt.compare(password, user.passwordHash);
-
-        if (!validPassword) return null;
-
-        return {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-        };
+        return AuthenticationService.authenticate(credentials);
       },
     }),
   ],

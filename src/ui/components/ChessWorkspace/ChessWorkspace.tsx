@@ -6,8 +6,13 @@ import MovesPanel from "@/ui/components/ChessWorkspace/MovesPanel";
 import OpeningTitle from "@/ui/components/ChessWorkspace/OpeningTitle";
 import { useChessWorkspace } from "@/ui/components/ChessWorkspace/hooks/useChessWorkspace";
 import { useStockfishAnalysis } from "@/ui/components/ChessWorkspace/hooks/useStockfishAnalysis";
+import WorkspaceHeader, { type WorkspaceUser } from "@/ui/components/ChessWorkspace/WorkspaceHeader";
 
-export default function ChessWorkspace() {
+type ChessWorkspaceProps = {
+  user: WorkspaceUser;
+};
+
+export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
   const { tree, moves, currentMove, currentMoveId, children, fen, applyMove, goToMove, updateMoveEvaluation, removeMove } = useChessWorkspace();
 
   const analysis = useStockfishAnalysis({
@@ -18,6 +23,7 @@ export default function ChessWorkspace() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
+      <WorkspaceHeader user={user} />
       <OpeningTitle fen={fen} />
 
       <div className="mx-auto grid w-full max-w-150 gap-3 sm:gap-4 lg:max-w-none lg:grid-cols-[minmax(0,600px)_minmax(0,1fr)]">
