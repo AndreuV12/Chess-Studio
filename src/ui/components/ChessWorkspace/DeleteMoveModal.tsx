@@ -2,7 +2,6 @@ import Modal from "@/ui/components/common/Modal";
 
 type DeleteMoveModalProps = {
   isOpen: boolean;
-  moveSan: string;
   descendantCount: number;
   isDeleting: boolean;
   errorMessage: string | null;
@@ -10,20 +9,12 @@ type DeleteMoveModalProps = {
   onConfirm: () => void;
 };
 
-export default function DeleteMoveModal({
-  isOpen,
-  moveSan,
-  descendantCount,
-  isDeleting,
-  errorMessage,
-  onClose,
-  onConfirm,
-}: DeleteMoveModalProps) {
+export default function DeleteMoveModal({ isOpen, descendantCount, isDeleting, errorMessage, onClose, onConfirm }: DeleteMoveModalProps) {
   return (
     <Modal isOpen={isOpen} title="Eliminar movimiento" onClose={onClose} size="sm">
       <div className="space-y-5 px-6 py-5">
         <p className="text-sm leading-6 text-zinc-600">
-          ¿Eliminar este movimiento ({moveSan})?{" "}
+          ¿Eliminar movimiento?{" "}
           {descendantCount === 1 ? (
             "Se eliminará también el movimiento que está a continuación."
           ) : (
