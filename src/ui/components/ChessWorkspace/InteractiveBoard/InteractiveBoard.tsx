@@ -101,7 +101,7 @@ export default function InteractiveBoard({ fen, lastMove, children, analysis, on
         <button
           type="button"
           onClick={() => setRotated((rotated) => !rotated)}
-          className="flex w-12 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 transition hover:bg-zinc-200"
+          className="flex shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 transition hover:bg-zinc-200 px-1 sm:px-2"
           aria-label="Girar tablero"
         >
           <RotateCwSquare size={22} />
