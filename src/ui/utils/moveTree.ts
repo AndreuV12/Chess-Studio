@@ -34,6 +34,10 @@ export function findMoveNode(tree: MoveNode[], moveId: number): MoveNode | undef
   }
 }
 
+export function getDescendantCount(move: MoveNode): number {
+  return move.children.reduce((total, child) => total + 1 + getDescendantCount(child), 0);
+}
+
 export function getMovePath(tree: MoveNode[], moveId: number | null): MoveResponse[] {
   if (moveId === null) return [];
   function walk(nodes: MoveNode[], path: MoveResponse[]): MoveResponse[] | null {

@@ -26,3 +26,14 @@ export function getLegalMoves(fen: string, square?: Square) {
 export function getBoard(fen: string) {
   return new Chess(fen).board();
 }
+
+export function getMoveSan(move: { fenFrom: string; uci: string }) {
+  const chess = new Chess(move.fenFrom);
+  const chessMove = chess.move({
+    from: move.uci.slice(0, 2) as Square,
+    to: move.uci.slice(2, 4) as Square,
+    promotion: move.uci[4],
+  });
+
+  return chessMove.san;
+}

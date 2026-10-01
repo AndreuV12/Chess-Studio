@@ -1,31 +1,17 @@
-import { Chess, type Square } from "chess.js";
+import { Chess } from "chess.js";
 import { Trash2 } from "lucide-react";
+import { getMoveSan } from "@/ui/utils/chess";
 import { getMoveQuality, moveQualityConfig } from "@/ui/utils/moveEvaluation";
-import type { MoveNode } from "@/ui/utils/moveTree";
+import { getDescendantCount, type MoveNode } from "@/ui/utils/moveTree";
 
 type MovesPanelProps = {
   moves: MoveNode[];
   evaluation: number | null;
   onMoveClick?: (move: MoveNode) => void;
-  onDeleted?: (moveId: number) => void;
+  onDeleteRequest?: (move: MoveNode) => void;
 };
 
-export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleted }: MovesPanelProps) {
-  function getSan(move: MoveNode) {
-    const chess = new Chess(move.fenFrom);
-    const chessMove = chess.move({
-      from: move.uci.slice(0, 2) as Square,
-      to: move.uci.slice(2, 4) as Square,
-      promotion: move.uci[4],
-    });
-
-    return chessMove.san;
-  }
-
-  function getDescendantCount(move: MoveNode): number {
-    return move.children.reduce((total, child) => total + 1 + getDescendantCount(child), 0);
-  }
-
+export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleteRequest }: MovesPanelProps) {
   function formatEvaluation(evaluation: number) {
     return evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
   }
@@ -72,7 +58,7 @@ export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleted }
                           <QualityIcon size={14} strokeWidth={2.5} />
                         </span>
                       )}
-                      <span className="font-medium text-zinc-900">{getSan(move)}</span>
+                      <span className="font-medium text-zinc-900">{getMoveSan(move)}</span>
                     </div>
 
                     {descendants > 0 && (
@@ -89,7 +75,7 @@ export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleted }
 
                 <button
                   type="button"
-                  onClick={() => onDeleted?.(move.id)}
+                  onClick={() => onDeleteRequest?.(move)}
                   className="flex w-11 shrink-0 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
                   title="Eliminar variante"
                   aria-label="Eliminar variante"
