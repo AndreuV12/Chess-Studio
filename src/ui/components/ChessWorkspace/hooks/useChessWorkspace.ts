@@ -3,6 +3,7 @@ import { DEFAULT_POSITION, type Move as ChessMove } from "chess.js";
 import type { MoveResponse } from "@/app/api/moves/schemas";
 import { MovesApi } from "@/ui/api/moves";
 import { buildMoveTree, findMoveNode, getMovePath } from "@/ui/utils/moveTree";
+export const PENDING_USER_ID = -1;
 
 export function useChessWorkspace() {
   const [moves, setMoves] = useState<MoveResponse[]>([]);
@@ -28,18 +29,40 @@ export function useChessWorkspace() {
       return existingMove;
     }
 
-    const move = await MovesApi.create({
+    const tempId = -Date.now();
+
+    const optimisticMove: MoveResponse = {
+      id: tempId,
+      userId: PENDING_USER_ID,
       parentId: currentMoveId,
       fenFrom: fen,
       fenTo,
       uci,
       evaluation: null,
-    });
+    };
 
-    setMoves((moves) => [...moves, move]);
-    setCurrentMoveId(move.id);
+    setMoves((moves) => [...moves, optimisticMove]);
+    setCurrentMoveId(tempId);
 
-    return move;
+    try {
+      const savedMove = await MovesApi.create({
+        parentId: currentMoveId,
+        fenFrom: fen,
+        fenTo,
+        uci,
+        evaluation: null,
+      });
+
+      setMoves((moves) => moves.map((move) => (move.id === tempId ? savedMove : move)));
+      setCurrentMoveId((currentId) => (currentId === tempId ? savedMove.id : currentId));
+
+      return savedMove;
+    } catch (error) {
+      setMoves((moves) => moves.filter((move) => move.id !== tempId));
+      setCurrentMoveId((currentId) => (currentId === tempId ? currentMoveId : currentId));
+
+      throw error;
+    }
   }
 
   function goToMove(moveId: number | null) {

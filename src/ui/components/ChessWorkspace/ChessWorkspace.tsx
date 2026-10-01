@@ -13,7 +13,7 @@ type ChessWorkspaceProps = {
 };
 
 export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
-  const { tree, moves, currentMove, currentMoveId, children, fen, applyMove, goToMove, updateMoveEvaluation, removeMove } = useChessWorkspace();
+  const { tree, currentMove, currentMoveId, children, fen, applyMove, goToMove, updateMoveEvaluation, removeMove } = useChessWorkspace();
 
   const stockfish = useStockfishAnalysis({
     fen,

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Stockfish } from "@/ui/engine/stockfish";
 import type { EngineAnalysis } from "@/ui/engine/types";
 import type { MoveResponse } from "@/app/api/moves/schemas";
+import { PENDING_USER_ID } from "./useChessWorkspace";
 
 type UseStockfishAnalysisProps = {
   fen: string;
@@ -39,6 +40,8 @@ export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: 
       setState((current) => ({ ...current, analysis: null }));
       return;
     }
+
+    if (currentMove.userId == PENDING_USER_ID) return;
 
     if (currentMove.evaluation !== null) {
       setState((current) => ({
