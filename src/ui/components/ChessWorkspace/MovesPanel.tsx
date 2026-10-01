@@ -1,14 +1,16 @@
 import { Chess, type Square } from "chess.js";
 import { Trash2 } from "lucide-react";
+import { getMoveQuality, moveQualityConfig } from "@/ui/utils/moveEvaluation";
 import type { MoveNode } from "@/ui/utils/moveTree";
 
 type MovesPanelProps = {
   moves: MoveNode[];
+  evaluation: number | null;
   onMoveClick?: (move: MoveNode) => void;
   onDeleted?: (moveId: number) => void;
 };
 
-export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanelProps) {
+export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleted }: MovesPanelProps) {
   function getSan(move: MoveNode) {
     const chess = new Chess(move.fenFrom);
     const chessMove = chess.move({
@@ -28,9 +30,15 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
     return evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
   }
 
-  async function handleDelete(move: MoveNode) {
-    onDeleted?.(move.id);
-  }
+  const sortedMoves = [...moves].sort((a, b) => {
+    const aEvaluation = a.evaluation;
+    const bEvaluation = b.evaluation;
+    if (aEvaluation == null && bEvaluation == null) return 0;
+    if (aEvaluation == null) return 1;
+    if (bEvaluation == null) return -1;
+    const turn = new Chess(a.fenFrom).turn();
+    return turn === "w" ? bEvaluation - aEvaluation : aEvaluation - bEvaluation;
+  });
 
   return (
     <section className="h-full min-w-0 rounded-lg border border-zinc-200 bg-white p-3 sm:p-4">
@@ -40,21 +48,35 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
         <p className="text-sm text-zinc-500">No hay jugadas guardadas desde esta posición.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {moves.map((move) => {
+          {sortedMoves.map((move) => {
             const descendants = getDescendantCount(move);
+            const quality = getMoveQuality(evaluation, move.evaluation, new Chess(move.fenFrom).turn());
+            const qualityInfo = quality ? moveQualityConfig[quality] : null;
+            const QualityIcon = qualityInfo?.icon;
 
             return (
               <div key={move.id} className="flex overflow-hidden rounded-md border border-zinc-200">
                 <button
                   type="button"
                   onClick={() => onMoveClick?.(move)}
-                  className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 px-3 py-2 text-left text-sm transition hover:bg-zinc-100 sm:text-base"
+                  className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-zinc-100"
                 >
                   <div className="min-w-0">
-                    <span className="font-medium">{getSan(move)}</span>
+                    <div className="flex items-center gap-2">
+                      {qualityInfo && QualityIcon && (
+                        <span
+                          className={`flex size-6 shrink-0 items-center justify-center rounded-full ${qualityInfo.className}`}
+                          title={qualityInfo.label}
+                          aria-label={qualityInfo.label}
+                        >
+                          <QualityIcon size={14} strokeWidth={2.5} />
+                        </span>
+                      )}
+                      <span className="font-medium text-zinc-900">{getSan(move)}</span>
+                    </div>
 
                     {descendants > 0 && (
-                      <span className="ml-2 text-xs text-zinc-400">
+                      <span className="text-xs text-zinc-400">
                         +{descendants} {descendants === 1 ? "jugada" : "jugadas"}
                       </span>
                     )}
@@ -67,7 +89,7 @@ export default function MovesPanel({ moves, onMoveClick, onDeleted }: MovesPanel
 
                 <button
                   type="button"
-                  onClick={() => handleDelete(move)}
+                  onClick={() => onDeleted?.(move.id)}
                   className="flex w-11 shrink-0 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
                   title="Eliminar variante"
                   aria-label="Eliminar variante"

@@ -32,7 +32,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
         </div>
 
         <div className="min-w-0">
-          <MovesPanel moves={children} onMoveClick={(move) => goToMove(move.id)} onDeleted={removeMove} />
+          <MovesPanel moves={children} evaluation={currentMove?.evaluation ?? null} onMoveClick={(move) => goToMove(move.id)} onDeleted={removeMove} />
         </div>
       </div>
 
