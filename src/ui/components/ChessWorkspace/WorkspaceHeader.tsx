@@ -6,10 +6,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import StockfishStatusChip from "./StockfishStatusChip";
 
-export type WorkspaceUser = {
-  name: string | null;
-  email: string;
-};
+import type { WorkspaceUser } from "./ChessWorkspace";
 
 type WorkspaceHeaderProps = {
   user: WorkspaceUser;
