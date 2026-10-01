@@ -38,6 +38,11 @@ export default function InteractiveBoard({ fen, lastMove, children, analysis, on
       return;
     }
 
+    if (piece?.color === chess.turn()) {
+      setSelected(square);
+      return;
+    }
+
     const legalMoves = chess.moves({
       square: selected,
       verbose: true,
