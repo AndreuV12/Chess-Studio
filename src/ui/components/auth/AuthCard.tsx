@@ -12,7 +12,7 @@ export default function AuthCard({ title, description, children }: AuthCardProps
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-100 px-4 py-10">
       <div
         aria-hidden="true"
-        className="absolute inset-0 opacity-50 [background-image:linear-gradient(45deg,#e4e4e7_25%,transparent_25%),linear-gradient(-45deg,#e4e4e7_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e4e4e7_75%),linear-gradient(-45deg,transparent_75%,#e4e4e7_75%)] [background-position:0_0,0_16px,16px_-16px,-16px_0] [background-size:32px_32px]"
+        className="absolute inset-0 bg-[linear-gradient(45deg,#e4e4e7_25%,transparent_25%),linear-gradient(-45deg,#e4e4e7_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e4e4e7_75%),linear-gradient(-45deg,transparent_75%,#e4e4e7_75%)] bg-size-[32px_32px] bg-position-[0_0,0_16px,16px_-16px,-16px_0] opacity-50"
       />
 
       <section className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-7 shadow-xl sm:p-8">
