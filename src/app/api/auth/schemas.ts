@@ -11,6 +11,10 @@ export const loginRequestSchema = z
   })
   .strict();
 
+export const loginResponseSchema = z.object({
+  authenticated: z.literal(true),
+});
+
 export const sessionUserIdSchema = z.coerce.number().int().positive();
 
 export const callbackUrlSchema = z
@@ -19,3 +23,4 @@ export const callbackUrlSchema = z
   .catch("/");
 
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type LoginResponse = z.infer<typeof loginResponseSchema>;

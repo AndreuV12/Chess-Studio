@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 
 const publicPagePaths = ["/login", "/register"];
-const publicApiPaths = ["/api/auth", "/api/register"];
+const publicApiPaths = ["/api/auth", "/api/login", "/api/register"];
 
 export const proxy = auth((request) => {
   const { pathname, search } = request.nextUrl;

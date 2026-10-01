@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { loginRequestSchema } from "@/app/api/auth/schemas";
 import { AuthenticationService } from "@/server/services/authentication.service";
@@ -10,6 +10,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
+  },
+  logger: {
+    error(error) {
+      if (error instanceof CredentialsSignin) return;
+      console.error("[Auth]", error);
+    },
   },
   callbacks: {
     session({ session, token }) {

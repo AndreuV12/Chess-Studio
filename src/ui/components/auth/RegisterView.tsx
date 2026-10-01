@@ -3,7 +3,6 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import type { ApiErrorResponse } from "@/app/api/schemas";
 import type { RegisterRequest } from "@/app/api/register/schemas";
 import { AuthApi } from "@/ui/api/auth";
@@ -52,31 +51,24 @@ export default function RegisterView({ callbackUrl }: RegisterViewProps) {
     }
 
     setState((current) => ({ ...current, isSubmitting: true, error: null }));
+    let accountCreated = false;
 
     try {
       await AuthApi.register(state.fields);
+      accountCreated = true;
 
-      const result = await signIn("credentials", {
+      await AuthApi.login({
         email: state.fields.email,
         password: state.fields.password,
-        redirect: false,
       });
-
-      if (!result.ok) {
-        setState((current) => ({
-          ...current,
-          isSubmitting: false,
-          error: "La cuenta se ha creado, pero no se pudo iniciar sesión. Accede desde la pantalla de login.",
-        }));
-        return;
-      }
 
       router.replace(callbackUrl);
       router.refresh();
     } catch (error) {
-      const message = axios.isAxiosError<ApiErrorResponse>(error)
-        ? error.response?.data.error
-        : undefined;
+      const responseMessage = axios.isAxiosError<ApiErrorResponse>(error) ? error.response?.data.error : undefined;
+      const message = accountCreated
+        ? "La cuenta se ha creado, pero no se pudo iniciar sesión. Accede desde la pantalla de login."
+        : responseMessage;
 
       setState((current) => ({
         ...current,

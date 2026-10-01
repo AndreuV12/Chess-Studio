@@ -1,9 +1,11 @@
 "use client";
 
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import type { LoginRequest } from "@/app/api/auth/schemas";
+import type { ApiErrorResponse } from "@/app/api/schemas";
+import { AuthApi } from "@/ui/api/auth";
 import AuthCard from "./AuthCard";
 import LoginForm from "./LoginForm";
 
@@ -43,28 +45,19 @@ export default function LoginView({ callbackUrl }: LoginViewProps) {
     setState((current) => ({ ...current, isSubmitting: true, error: null }));
 
     try {
-      const result = await signIn("credentials", {
-        email: state.fields.email,
-        password: state.fields.password,
-        redirect: false,
-      });
-
-      if (!result.ok) {
-        setState((current) => ({
-          ...current,
-          isSubmitting: false,
-          error: "El correo o la contraseña no son correctos.",
-        }));
-        return;
-      }
+      await AuthApi.login(state.fields);
 
       router.replace(callbackUrl);
       router.refresh();
-    } catch {
+    } catch (error) {
+      const message = axios.isAxiosError<ApiErrorResponse>(error)
+        ? error.response?.data.error
+        : undefined;
+
       setState((current) => ({
         ...current,
         isSubmitting: false,
-        error: "No se ha podido iniciar sesión. Inténtalo de nuevo.",
+        error: message ?? "No se ha podido iniciar sesión. Inténtalo de nuevo.",
       }));
     }
   }
