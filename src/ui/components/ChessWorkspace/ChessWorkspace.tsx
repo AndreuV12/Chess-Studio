@@ -88,7 +88,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
   const deletingMoveId = deleteMoveModal.loading ? (deleteMoveModal.data?.moveId ?? null) : directDeletingMoveId;
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
+    <main className="mx-auto min-h-[calc(100dvh+150px)] w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
       <WorkspaceHeader user={user} isStockfishReady={stockfish.isReady} />
       <OpeningTitle fen={fen} />
 
