@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import InteractiveBoard from "@/ui/components/ChessWorkspace/InteractiveBoard/InteractiveBoard";
 import ChessHistory from "@/ui/components/ChessWorkspace/ChessHistory/ChessHistory";
 import DeleteMoveModal from "@/ui/components/ChessWorkspace/DeleteMoveModal";
@@ -22,6 +23,7 @@ type ChessWorkspaceProps = {
 };
 
 export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
+  const [directDeletingMoveId, setDirectDeletingMoveId] = useState<number | null>(null);
   const {
     tree,
     currentMove,
@@ -65,7 +67,14 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
   async function requestMoveDeletion(move: MoveNode) {
     const descendantCount = getDescendantCount(move);
     if (descendantCount === 0) {
-      await removeMove(move.id);
+      setDirectDeletingMoveId(move.id);
+
+      try {
+        await removeMove(move.id);
+      } finally {
+        setDirectDeletingMoveId(null);
+      }
+
       return;
     }
     deleteMoveModal.open({
@@ -76,6 +85,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
 
   const deleteErrorMessage =
     deleteMoveModal.error instanceof Error ? deleteMoveModal.error.message : deleteMoveModal.error ? "No se pudo eliminar el movimiento." : null;
+  const deletingMoveId = deleteMoveModal.loading ? (deleteMoveModal.data?.moveId ?? null) : directDeletingMoveId;
 
   return (
     <main className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-5 lg:p-6">
@@ -91,6 +101,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
           <MovesPanel
             moves={children}
             evaluation={currentMove?.evaluation ?? null}
+            deletingMoveId={deletingMoveId}
             onMoveClick={(move) => goToMove(move.id)}
             onDeleteRequest={requestMoveDeletion}
           />

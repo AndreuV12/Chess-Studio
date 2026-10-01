@@ -1,5 +1,5 @@
 import { Chess } from "chess.js";
-import { Trash2 } from "lucide-react";
+import { LoaderCircle, Trash2 } from "lucide-react";
 import { getMoveSan } from "@/ui/utils/chess";
 import { getMoveQuality, moveQualityConfig } from "@/ui/utils/moveEvaluation";
 import { getDescendantCount, type MoveNode } from "@/ui/utils/moveTree";
@@ -7,11 +7,12 @@ import { getDescendantCount, type MoveNode } from "@/ui/utils/moveTree";
 type MovesPanelProps = {
   moves: MoveNode[];
   evaluation: number | null;
+  deletingMoveId: number | null;
   onMoveClick?: (move: MoveNode) => void;
   onDeleteRequest?: (move: MoveNode) => void;
 };
 
-export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleteRequest }: MovesPanelProps) {
+export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveClick, onDeleteRequest }: MovesPanelProps) {
   function formatEvaluation(evaluation: number) {
     return evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
   }
@@ -36,6 +37,7 @@ export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleteReq
         <div className="flex flex-col gap-2">
           {sortedMoves.map((move) => {
             const descendants = getDescendantCount(move);
+            const isDeleting = deletingMoveId === move.id;
             const quality = getMoveQuality(evaluation, move.evaluation, new Chess(move.fenFrom).turn());
             const qualityInfo = quality ? moveQualityConfig[quality] : null;
             const QualityIcon = qualityInfo?.icon;
@@ -76,11 +78,12 @@ export default function MovesPanel({ moves, evaluation, onMoveClick, onDeleteReq
                 <button
                   type="button"
                   onClick={() => onDeleteRequest?.(move)}
-                  className="flex w-11 shrink-0 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
-                  title="Eliminar variante"
-                  aria-label="Eliminar variante"
+                  disabled={deletingMoveId !== null}
+                  className="flex w-11 shrink-0 items-center justify-center border-l border-zinc-200 text-zinc-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+                  title={isDeleting ? "Eliminando variante" : "Eliminar variante"}
+                  aria-label={isDeleting ? "Eliminando variante" : "Eliminar variante"}
                 >
-                  <Trash2 size={16} />
+                  {isDeleting ? <LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> : <Trash2 size={16} aria-hidden="true" />}
                 </button>
               </div>
             );
