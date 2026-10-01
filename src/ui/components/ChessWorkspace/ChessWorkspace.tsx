@@ -7,13 +7,36 @@ import OpeningTitle from "@/ui/components/ChessWorkspace/OpeningTitle";
 import { useChessWorkspace } from "@/ui/components/ChessWorkspace/hooks/useChessWorkspace";
 import { useStockfishAnalysis } from "@/ui/components/ChessWorkspace/hooks/useStockfishAnalysis";
 import WorkspaceHeader, { type WorkspaceUser } from "@/ui/components/ChessWorkspace/WorkspaceHeader";
+import { useChessKeyboardNavigation } from "@/ui/components/ChessWorkspace/hooks/useChessKeyboardNavigation";
 
 type ChessWorkspaceProps = {
   user: WorkspaceUser;
 };
 
 export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
-  const { tree, currentMove, currentMoveId, children, fen, applyMove, goToMove, updateMoveEvaluation, removeMove } = useChessWorkspace();
+  const {
+    tree,
+    currentMove,
+    currentMoveId,
+    children,
+    fen,
+    selectedBranches,
+    applyMove,
+    goToMove,
+    selectBranch,
+    goToPreviousMove,
+    goToNextMove,
+    changeVariant,
+    updateMoveEvaluation,
+    removeMove,
+  } = useChessWorkspace();
+
+  useChessKeyboardNavigation({
+    onPrevious: goToPreviousMove,
+    onNext: goToNextMove,
+    onPreviousVariant: () => changeVariant(-1),
+    onNextVariant: () => changeVariant(1),
+  });
 
   const stockfish = useStockfishAnalysis({
     fen,
@@ -36,7 +59,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
         </div>
       </div>
 
-      <ChessHistory tree={tree} currentMoveId={currentMoveId} onMoveClick={goToMove} />
+      <ChessHistory tree={tree} currentMoveId={currentMoveId} selectedBranches={selectedBranches} onMoveClick={goToMove} onBranchSelect={selectBranch} />
     </main>
   );
 }

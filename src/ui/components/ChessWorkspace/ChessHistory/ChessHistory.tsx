@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Chess, DEFAULT_POSITION, type Square } from "chess.js";
 import MoveButton, { type PlayedMove } from "./MoveButton";
 import type { MoveNode } from "@/ui/utils/moveTree";
@@ -8,30 +8,13 @@ import type { MoveNode } from "@/ui/utils/moveTree";
 type ChessHistoryProps = {
   tree: MoveNode[];
   currentMoveId: number | null;
+  selectedBranches: Record<string, number>;
   onMoveClick: (moveId: number) => void;
+  onBranchSelect: (branchKey: string, moveId: number) => void;
 };
 
-export default function ChessHistory({ tree, currentMoveId, onMoveClick }: ChessHistoryProps) {
-  const [selectedBranches, setSelectedBranches] = useState<Record<string, number>>({});
+export default function ChessHistory({ tree, currentMoveId, selectedBranches, onMoveClick, onBranchSelect }: ChessHistoryProps) {
   const [openBranch, setOpenBranch] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (currentMoveId === null) return;
-
-    const path = findPath(tree, currentMoveId);
-    if (!path) return;
-
-    setSelectedBranches((current) => {
-      const next = { ...current };
-
-      path.forEach((move, index) => {
-        const parentKey = index === 0 ? "root" : String(path[index - 1].id);
-        next[parentKey] = move.id;
-      });
-
-      return next;
-    });
-  }, [tree, currentMoveId]);
 
   const playedMoves = useMemo(() => buildPlayedMoves(tree, selectedBranches), [tree, selectedBranches]);
 
@@ -46,11 +29,7 @@ export default function ChessHistory({ tree, currentMoveId, onMoveClick }: Chess
   }
 
   function selectBranch(move: PlayedMove, moveId: number) {
-    setSelectedBranches((current) => ({
-      ...current,
-      [move.branchKey]: moveId,
-    }));
-
+    onBranchSelect(move.branchKey, moveId);
     setOpenBranch(null);
     onMoveClick(moveId);
   }
@@ -137,19 +116,6 @@ function playMove(chess: Chess, move: MoveNode) {
   });
 }
 
-function findPath(nodes: MoveNode[], moveId: number, path: MoveNode[] = []): MoveNode[] | null {
-  for (const node of nodes) {
-    const nextPath = [...path, node];
-
-    if (node.id === moveId) return nextPath;
-
-    const found = findPath(node.children, moveId, nextPath);
-    if (found) return found;
-  }
-
-  return null;
-}
-
 function getLongestNode(nodes: MoveNode[]): MoveNode | undefined {
   let longestNode: MoveNode | undefined;
   let longestDepth = -1;
@@ -168,6 +134,5 @@ function getLongestNode(nodes: MoveNode[]): MoveNode | undefined {
 
 function getDepth(node: MoveNode): number {
   if (node.children.length === 0) return 1;
-
   return 1 + Math.max(...node.children.map(getDepth));
 }
