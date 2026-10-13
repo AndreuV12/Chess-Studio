@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess, type Move as ChessMove } from "chess.js";
 import { LoaderCircle, Trash2 } from "lucide-react";
 import type { EngineBestMove } from "@/ui/engine/types";
 import { useOpeningNameResolver } from "@/ui/components/ChessWorkspace/hooks/useOpeningNameResolver";
@@ -13,11 +13,12 @@ type MovesPanelProps = {
   bestMoves: EngineBestMove[];
   analysisDepth: number;
   deletingMoveId: number | null;
+  onMove?: (move: ChessMove, fen: string) => void;
   onMoveClick?: (move: MoveNode) => void;
   onDeleteRequest?: (move: MoveNode) => void;
 };
 
-export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysisDepth, deletingMoveId, onMoveClick, onDeleteRequest }: MovesPanelProps) {
+export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysisDepth, deletingMoveId, onMove, onMoveClick, onDeleteRequest }: MovesPanelProps) {
   const getOpeningName = useOpeningNameResolver();
 
   function formatEvaluation(value: number) {
@@ -38,6 +39,17 @@ export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysis
     } catch {
       return uci;
     }
+  }
+
+  function handleBestMoveClick(uci: string) {
+    const chess = new Chess(fen);
+    const move = chess.move({
+      from: uci.slice(0, 2),
+      to: uci.slice(2, 4),
+      promotion: uci[4] || undefined,
+    });
+
+    onMove?.(move, chess.fen());
   }
 
   const sortedMoves = [...moves].sort((a, b) => {
@@ -141,7 +153,12 @@ export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysis
       ) : (
         <div className="flex flex-col gap-1.5">
           {bestMoves.map((move) => (
-            <div key={move.rank} className="flex items-center gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+            <button
+              key={move.rank}
+              type="button"
+              onClick={() => handleBestMoveClick(move.move)}
+              className="flex w-full items-center gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-left transition hover:bg-zinc-100"
+            >
               <span className="w-5 shrink-0 text-sm font-semibold text-zinc-400">{move.rank}.</span>
 
               <div className="min-w-0 flex-1">
@@ -153,7 +170,7 @@ export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysis
               <span className="shrink-0 text-sm font-semibold text-zinc-600">
                 {move.mate !== null ? `M${move.mate}` : move.evaluation !== null ? formatEvaluation(move.evaluation) : "—"}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       )}

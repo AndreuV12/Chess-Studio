@@ -105,6 +105,7 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
             bestMoves={stockfish.analysis?.bestMoves ?? []}
             analysisDepth={stockfish.analysis?.depth ?? 0}
             deletingMoveId={deletingMoveId}
+            onMove={applyMove}
             onMoveClick={(move) => goToMove(move.id)}
             onDeleteRequest={requestMoveDeletion}
           />
