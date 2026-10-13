@@ -1,20 +1,25 @@
-import type { AnalyzeOptions, EngineAnalysis } from "./types";
-
-type PendingAnalysis = {
-  turn: "w" | "b";
-  resolve: (analysis: EngineAnalysis) => void;
-  reject: (error: Error) => void;
-  latest: EngineAnalysis;
-};
-
+import type { AnalyzeOptions, EngineAnalysis, EngineBestMove, PendingAnalysis } from "./types";
 const MAX_EVALUATION = 100;
+
+const createEmptyAnalysis = (): EngineAnalysis => ({
+  depth: 0,
+  evaluation: null,
+  mate: null,
+  bestMove: null,
+  pv: [],
+  bestMoves: [],
+});
 
 export class Stockfish {
   private static instance: Stockfish | null = null;
+
   private worker: Worker;
   private ready = false;
   private readyListeners = new Set<(isReady: boolean) => void>();
+
   private currentAnalysis: PendingAnalysis | null = null;
+  private waitingForStop = false;
+  private queuedStart: (() => void) | null = null;
 
   private constructor() {
     this.worker = new Worker("/stockfish/stockfish-19-single.js");
@@ -25,8 +30,12 @@ export class Stockfish {
 
     this.worker.onerror = (event) => {
       console.error("[Stockfish] Worker error", event);
+
       this.currentAnalysis?.reject(new Error("Stockfish worker error"));
+
       this.currentAnalysis = null;
+      this.waitingForStop = false;
+      this.queuedStart = null;
       this.setReady(false);
     };
 
@@ -69,112 +78,199 @@ export class Stockfish {
 
     if (message === "readyok") {
       this.setReady(true);
-      console.log("[Stockfish] Ready");
-      return;
-    }
-
-    if (!this.currentAnalysis) return;
-
-    if (message.startsWith("info ")) {
-      this.parseInfo(message);
       return;
     }
 
     if (message.startsWith("bestmove ")) {
-      const bestMove = message.split(" ")[1] ?? null;
-      this.currentAnalysis.latest.bestMove = bestMove;
+      this.handleBestMove(message);
+      return;
+    }
 
-      const result = this.currentAnalysis.latest;
-
-      console.log("[Stockfish] Analysis completed", result);
-
-      this.currentAnalysis.resolve(result);
-      this.currentAnalysis = null;
+    if (message.startsWith("info ") && this.currentAnalysis && !this.currentAnalysis.cancelled) {
+      this.parseInfo(message);
     }
   }
 
+  private handleBestMove(message: string) {
+    const pending = this.currentAnalysis;
+
+    this.currentAnalysis = null;
+
+    if (pending && !pending.cancelled) {
+      const bestMove = message.split(" ")[1] ?? null;
+
+      pending.latest.bestMove = bestMove === "(none)" ? null : bestMove;
+
+      this.finalizeLines(pending);
+
+      pending.resolve(pending.latest);
+
+      console.log("[Stockfish] Analysis completed", pending.latest);
+    }
+
+    if (this.waitingForStop) {
+      this.waitingForStop = false;
+    }
+    const next = this.queuedStart;
+    this.queuedStart = null;
+    next?.();
+  }
+
   private parseInfo(message: string) {
-    if (!this.currentAnalysis) return;
+    const pending = this.currentAnalysis;
+    if (!pending) return;
 
     const depthMatch = message.match(/\bdepth (\d+)/);
+    const multiPVMatch = message.match(/\bmultipv (\d+)/);
     const cpMatch = message.match(/\bscore cp (-?\d+)/);
     const mateMatch = message.match(/\bscore mate (-?\d+)/);
     const pvMatch = message.match(/\bpv (.+)$/);
 
-    const multiplier = this.currentAnalysis.turn === "w" ? 1 : -1;
+    if (!depthMatch || !pvMatch) return;
+    if (!cpMatch && !mateMatch) return;
 
-    if (depthMatch) {
-      this.currentAnalysis.latest.depth = Number(depthMatch[1]);
-    }
+    const depth = Number(depthMatch[1]);
+    const rank = multiPVMatch ? Number(multiPVMatch[1]) : 1;
+
+    if (rank > pending.multiPV) return;
+
+    const multiplier = pending.turn === "w" ? 1 : -1;
+
+    let evaluation: number | null = null;
+    let mate: number | null = null;
 
     if (cpMatch) {
-      this.currentAnalysis.latest.evaluation = (Number(cpMatch[1]) / 100) * multiplier;
-      this.currentAnalysis.latest.mate = null;
+      evaluation = (Number(cpMatch[1]) / 100) * multiplier;
     }
 
     if (mateMatch) {
-      const mate = Number(mateMatch[1]) * multiplier;
-      this.currentAnalysis.latest.mate = mate;
-      this.currentAnalysis.latest.evaluation = Math.sign(mate) * MAX_EVALUATION;
+      mate = Number(mateMatch[1]) * multiplier;
+      evaluation = Math.sign(mate) * MAX_EVALUATION;
     }
 
-    if (pvMatch) {
-      this.currentAnalysis.latest.pv = pvMatch[1].split(" ");
+    const pv = pvMatch[1].trim().split(/\s+/);
+
+    const line: EngineBestMove = {
+      rank,
+      move: pv[0],
+      evaluation,
+      mate,
+      pv,
+    };
+
+    if (!pending.lines.has(depth)) {
+      pending.lines.set(depth, new Map());
+    }
+
+    pending.lines.get(depth)!.set(rank, line);
+
+    this.updateLatestLines(pending);
+  }
+
+  private updateLatestLines(pending: PendingAnalysis) {
+    // Buscamos la profundidad más alta que tenga
+    // todas las alternativas solicitadas.
+    const depths = [...pending.lines.keys()].sort((a, b) => b - a);
+
+    const completeDepth = depths.find((depth) => {
+      const lines = pending.lines.get(depth)!;
+
+      return Array.from({ length: pending.multiPV }, (_, index) => index + 1).every((rank) => lines.has(rank));
+    });
+
+    if (completeDepth === undefined) return;
+
+    const lines = pending.lines.get(completeDepth)!;
+
+    const bestMoves = [...lines.values()].sort((a, b) => a.rank - b.rank);
+
+    const best = bestMoves[0];
+
+    pending.latest = {
+      ...pending.latest,
+      depth: completeDepth,
+      evaluation: best.evaluation,
+      mate: best.mate,
+      pv: best.pv,
+      bestMoves,
+    };
+
+    // Conservamos únicamente las profundidades
+    // recientes para evitar acumular resultados.
+    for (const depth of pending.lines.keys()) {
+      if (depth < completeDepth) {
+        pending.lines.delete(depth);
+      }
     }
   }
 
+  private finalizeLines(pending: PendingAnalysis) {
+    this.updateLatestLines(pending);
+  }
+
   async analyze(fen: string, options: AnalyzeOptions = {}): Promise<EngineAnalysis | null> {
-    if (!this.ready) {
-      return null;
-    }
-
-    if (this.currentAnalysis) {
-      this.currentAnalysis.reject(new Error("Analysis cancelled"));
-      this.currentAnalysis = null;
-      this.worker.postMessage("stop");
-    }
-
+    if (!this.ready) return null;
     const depth = options.depth ?? 18;
+    const multiPV = options.multiPV ?? 1;
     const turn = fen.split(" ")[1] as "w" | "b";
+    this.stop();
 
-    console.log("[Stockfish] Starting analysis", {
-      fen,
-      depth,
-      turn,
-    });
-
-    return await new Promise((resolve, reject) => {
-      this.currentAnalysis = {
+    return new Promise<EngineAnalysis>((resolve, reject) => {
+      const pending: PendingAnalysis = {
         turn,
         resolve,
         reject,
-        latest: {
-          depth: 0,
-          evaluation: null,
-          mate: null,
-          bestMove: null,
-          pv: [],
-        },
+        latest: createEmptyAnalysis(),
+        lines: new Map(),
+        requestedDepth: depth,
+        multiPV,
+        cancelled: false,
       };
 
-      this.worker.postMessage(`position fen ${fen}`);
-      this.worker.postMessage(`go depth ${depth}`);
+      const start = () => {
+        if (pending.cancelled) return;
+        this.currentAnalysis = pending;
+        console.log("[Stockfish] Starting analysis", {
+          fen,
+          depth,
+          multiPV,
+        });
+        this.worker.postMessage(`setoption name MultiPV value ${multiPV}`);
+        this.worker.postMessage(`position fen ${fen}`);
+        this.worker.postMessage(`go depth ${depth}`);
+      };
+
+      if (this.waitingForStop) {
+        this.queuedStart = start;
+      } else {
+        start();
+      }
     });
   }
 
   stop() {
-    if (!this.currentAnalysis) return;
-
-    this.currentAnalysis.reject(new Error("Analysis cancelled"));
-    this.currentAnalysis = null;
+    if (this.queuedStart) {
+      this.queuedStart = null;
+    }
+    const pending = this.currentAnalysis;
+    if (!pending || pending.cancelled) return;
+    pending.cancelled = true;
+    pending.reject(new Error("Analysis cancelled"));
+    this.waitingForStop = true;
     this.worker.postMessage("stop");
   }
 
   destroy() {
     this.stop();
+
     this.worker.terminate();
+    this.currentAnalysis = null;
+    this.queuedStart = null;
+    this.waitingForStop = false;
+
     this.setReady(false);
     this.readyListeners.clear();
+
     Stockfish.instance = null;
   }
 }

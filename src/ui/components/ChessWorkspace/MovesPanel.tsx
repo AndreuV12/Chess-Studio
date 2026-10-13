@@ -1,32 +1,55 @@
 import { Chess } from "chess.js";
 import { LoaderCircle, Trash2 } from "lucide-react";
+import type { EngineBestMove } from "@/ui/engine/types";
 import { useOpeningNameResolver } from "@/ui/components/ChessWorkspace/hooks/useOpeningNameResolver";
 import { getMoveSan } from "@/ui/utils/chess";
 import { getMoveQuality, moveQualityConfig } from "@/ui/utils/moveEvaluation";
 import { getDescendantCount, type MoveNode } from "@/ui/utils/moveTree";
 
 type MovesPanelProps = {
+  fen: string;
   moves: MoveNode[];
   evaluation: number | null;
+  bestMoves: EngineBestMove[];
+  analysisDepth: number;
   deletingMoveId: number | null;
   onMoveClick?: (move: MoveNode) => void;
   onDeleteRequest?: (move: MoveNode) => void;
 };
 
-export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveClick, onDeleteRequest }: MovesPanelProps) {
+export default function MovesPanel({ fen, moves, evaluation, bestMoves, analysisDepth, deletingMoveId, onMoveClick, onDeleteRequest }: MovesPanelProps) {
   const getOpeningName = useOpeningNameResolver();
 
-  function formatEvaluation(evaluation: number) {
-    return evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
+  function formatEvaluation(value: number) {
+    return value > 0 ? `+${value.toFixed(2)}` : value.toFixed(2);
+  }
+
+  function getBestMoveSan(uci: string) {
+    try {
+      const chess = new Chess(fen);
+
+      const move = chess.move({
+        from: uci.slice(0, 2),
+        to: uci.slice(2, 4),
+        promotion: uci[4] || undefined,
+      });
+
+      return move.san;
+    } catch {
+      return uci;
+    }
   }
 
   const sortedMoves = [...moves].sort((a, b) => {
     const aEvaluation = a.evaluation;
     const bEvaluation = b.evaluation;
+
     if (aEvaluation == null && bEvaluation == null) return 0;
     if (aEvaluation == null) return 1;
     if (bEvaluation == null) return -1;
+
     const turn = new Chess(a.fenFrom).turn();
+
     return turn === "w" ? bEvaluation - aEvaluation : aEvaluation - bEvaluation;
   });
 
@@ -42,8 +65,11 @@ export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveCl
             const descendants = getDescendantCount(move);
             const isDeleting = deletingMoveId === move.id;
             const openingName = getOpeningName(move.fenTo);
+
             const quality = getMoveQuality(evaluation, move.evaluation, new Chess(move.fenFrom).turn());
+
             const qualityInfo = quality ? moveQualityConfig[quality] : null;
+
             const QualityIcon = qualityInfo?.icon;
 
             return (
@@ -57,7 +83,7 @@ export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveCl
                     <div className="flex items-center gap-1.5">
                       {qualityInfo && QualityIcon && (
                         <span
-                          className={`flex p-2 shrink-0 items-center justify-center rounded-full ${qualityInfo.className}`}
+                          className={`flex shrink-0 items-center justify-center rounded-full p-2 ${qualityInfo.className}`}
                           title={qualityInfo.label}
                           aria-label={qualityInfo.label}
                         >
@@ -73,7 +99,7 @@ export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveCl
                     </div>
 
                     {(openingName || descendants > 0) && (
-                      <div className="mt-0.5 flex justify-between min-w-0 items-center gap-2 text-xs text-zinc-400">
+                      <div className="mt-0.5 flex min-w-0 items-center justify-between gap-2 text-xs text-zinc-400">
                         {openingName && (
                           <span className="truncate" title={openingName}>
                             {openingName}
@@ -99,6 +125,36 @@ export default function MovesPanel({ moves, evaluation, deletingMoveId, onMoveCl
               </div>
             );
           })}
+        </div>
+      )}
+
+      <div className="my-4 border-t border-zinc-200" />
+
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-base font-semibold text-zinc-900">Mejores jugadas</h2>
+
+        {analysisDepth > 0 && <span className="text-xs text-zinc-400">Profundidad {analysisDepth}</span>}
+      </div>
+
+      {bestMoves.length === 0 ? (
+        <p className="text-sm text-zinc-500">Esperando análisis de Stockfish...</p>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {bestMoves.map((move) => (
+            <div key={move.rank} className="flex items-center gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+              <span className="w-5 shrink-0 text-sm font-semibold text-zinc-400">{move.rank}.</span>
+
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-zinc-900">{getBestMoveSan(move.move)}</span>
+
+                <p className="mt-0.5 truncate text-xs text-zinc-400">{move.pv.join(" ")}</p>
+              </div>
+
+              <span className="shrink-0 text-sm font-semibold text-zinc-600">
+                {move.mate !== null ? `M${move.mate}` : move.evaluation !== null ? formatEvaluation(move.evaluation) : "—"}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </section>
