@@ -18,7 +18,13 @@ export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: 
     analysis: null,
     isReady: false,
   });
+
   const stockfishRef = useRef<Stockfish | null>(null);
+  const onEvaluationUpdatedRef = useRef(onEvaluationUpdated);
+
+  useEffect(() => {
+    onEvaluationUpdatedRef.current = onEvaluationUpdated;
+  }, [onEvaluationUpdated]);
 
   useEffect(() => {
     const stockfish = Stockfish.getInstance();
@@ -31,57 +37,73 @@ export function useStockfishAnalysis({ fen, currentMove, onEvaluationUpdated }: 
     return () => {
       unsubscribe();
       stockfish.stop();
+      stockfishRef.current = null;
     };
   }, []);
 
+  const moveId = currentMove?.id;
+  const userId = currentMove?.userId;
+  const savedEvaluation = currentMove?.evaluation;
+
   useEffect(() => {
     const stockfish = stockfishRef.current;
-    if (!stockfish || !currentMove) {
-      setState((current) => ({ ...current, analysis: null }));
-      return;
-    }
 
-    if (currentMove.userId == PENDING_USER_ID) return;
-
-    if (currentMove.evaluation !== null) {
+    if (!stockfish || !state.isReady) {
       setState((current) => ({
         ...current,
-        analysis: {
-          depth: 0,
-          evaluation: currentMove.evaluation,
-          mate: null,
-          bestMove: null,
-          pv: [],
-        },
+        analysis: null,
       }));
       return;
     }
 
-    if (!stockfish.isReady()) {
-      setState((current) => ({ ...current, analysis: null }));
+    // No analizamos movimientos pendientes.
+    if (userId === PENDING_USER_ID) {
+      stockfish.stop();
+      setState((current) => ({
+        ...current,
+        analysis: null,
+      }));
       return;
     }
 
-    stockfish
-      .analyze(fen, { depth: 18 })
-      .then(async (analysis) => {
-        if (!analysis) return;
+    let cancelled = false;
 
-        setState((current) => ({ ...current, analysis }));
-        if (analysis.evaluation !== null) {
-          await onEvaluationUpdated(currentMove.id, analysis.evaluation);
+    stockfish
+      .analyze(fen, {
+        depth: 18,
+        multiPV: 3,
+      })
+      .then(async (result) => {
+        if (!result || cancelled) return;
+
+        setState((current) => ({
+          ...current,
+          analysis: {
+            ...result,
+            evaluation: savedEvaluation ?? result.evaluation,
+          },
+        }));
+
+        // Guardamos la evaluación solo si no existe.
+        if (moveId !== undefined && savedEvaluation == null && result.evaluation !== null) {
+          try {
+            await onEvaluationUpdatedRef.current(moveId, result.evaluation);
+          } catch (error) {
+            console.error("[Stockfish] Error saving evaluation", error);
+          }
         }
       })
       .catch((error) => {
-        if (error.message !== "Analysis cancelled") {
-          console.error(error);
+        if (!cancelled && (!(error instanceof Error) || error.message !== "Analysis cancelled")) {
+          console.error("[Stockfish]", error);
         }
       });
 
     return () => {
+      cancelled = true;
       stockfish.stop();
     };
-  }, [currentMove, fen]);
+  }, [fen, moveId, userId, savedEvaluation, state.isReady]);
 
   return state;
 }

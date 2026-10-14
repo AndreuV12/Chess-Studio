@@ -99,9 +99,13 @@ export default function ChessWorkspace({ user }: ChessWorkspaceProps) {
 
         <div className="min-w-0">
           <MovesPanel
+            fen={fen}
             moves={children}
             evaluation={currentMove?.evaluation ?? null}
+            bestMoves={stockfish.analysis?.bestMoves ?? []}
+            analysisDepth={stockfish.analysis?.depth ?? 0}
             deletingMoveId={deletingMoveId}
+            onMove={applyMove}
             onMoveClick={(move) => goToMove(move.id)}
             onDeleteRequest={requestMoveDeletion}
           />
